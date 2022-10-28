@@ -17,7 +17,11 @@ from os.path import join
 
 DATA_PATH = join(os.path.dirname(os.path.abspath(__file__)), "test_data/")
 
-TESTING_MDRUN_FLAGS = {"ntmpi": 1, "ntomp": 6, "gpu_id": 0}
+#TESTING_MDRUN_FLAGS = {"ntmpi": 1, "ntomp": 6, "gpu_id": "0"}
+#TESTING_MDRUN_FLAGS = {"ntmpi": 1, "ntomp": 6, "nb": "cpu"}
+#TESTING_MDRUN_FLAGS = {"nb": "cpu"}
+TESTING_MDRUN_FLAGS = {}
+
 
 
 #####   FULL WORKFLOW TESTS   #####
