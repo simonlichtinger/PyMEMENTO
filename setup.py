@@ -46,7 +46,6 @@ setup(
         "MDAnalysis >= 2.0.0",
         "numpy",
         "pandas>=1.1.3",
-        "pytest",
         "pytest-cov==3.0.0",
         "GromacsWrapper",
     ],  # Required packages, pulls from pip if needed; do not use for Conda deployment
