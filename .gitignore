@@ -1,0 +1,10 @@
+build
+dist
+htmlcov
+PyMEMENTO.egg-info
+*/__pycache__
+__pycache__
+.eggs
+.pytest_cache
+.vscode
+.coverage

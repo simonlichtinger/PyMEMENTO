@@ -1,0 +1,54 @@
+;
+;	File 'topol.top' was generated
+;	By user: grte2001 (13439)
+;	On host: mc73235.bioch.ox.ac.uk
+;	At date: Sat Oct 31 16:51:22 2020
+;
+;	This is a standalone topology file
+;
+;	Created by:
+;	                :-) GROMACS - gmx pdb2gmx, 2020.2-MODIFIED (-:
+;	
+;	Executable:   /usr/local/gromacs/2020.2/bin/gmx
+;	Data prefix:  /usr/local/gromacs/2020.2
+;	Working dir:  /Volumes/GoogleDrive/My Drive/Simulations/PepT2/Free/equil
+;	Command line:
+;	  gmx pdb2gmx -f PepT2_capped.pdb -o protein.gro -ignh
+;	Force field was read from the standard GROMACS share directory.
+;
+
+; Include forcefield parameters
+#include "charmm36-jul2021.ff/forcefield.itp"
+
+
+#include "protein.itp"
+
+#ifdef POSRES
+#include "posre.itp"
+#endif
+
+
+#include "POPE.itp"
+
+; Include water topology
+#include "charmm36-jul2021.ff/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+; Include topology for ions
+#include "charmm36-jul2021.ff/ions.itp"
+
+
+[ system ]
+; Name
+Protein in water
+
+[ molecules ]
+; Compound        #mols
+Protein         1
+POPE    344

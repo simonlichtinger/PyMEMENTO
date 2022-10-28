@@ -1,0 +1,5 @@
+[run]
+omit = 
+	*/PyMEMENTO/__init__.py
+	*/PyMEMENTO/_version.py
+	*/PyMEMENTO/tests/*
