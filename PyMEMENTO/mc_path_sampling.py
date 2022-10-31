@@ -11,9 +11,17 @@ from MDAnalysis.analysis.rms import rmsd
 
 
 def run_one_replicate_of_mc(seed, sampler):
-    """This is a wrapper function in order to call run_monte_carlo from a multiprocessing pool.
-    It needs to lie outside the class so that it is picklable and I don't have to extend beyond
-    the standard multiprocessing library."""
+    """Wrapper function in order to call run_monte_carlo from a multiprocessing pool.
+    It needs to lie outside the class so that it is picklable and can be handled with the
+    standard multiprocessing library.
+    
+    :param seed: Seed for the random number generator.
+    :type seed: int
+    :param sampler: The sampler object to run.
+    :type sampler: :class:`MCPathSampler`
+    
+    :return: The pathsampling output as from run_monte_carlo.
+    :rtype: tuple"""
     start_time = time.time()
     print("Replicate is initialised")
     optimum = sampler.run_monte_carlo(
@@ -77,9 +85,15 @@ class MCPathSampler:
                     )
                 )
 
-    def __path_energy_function(self, path):
+    def path_energy_function(self, path):
         """Computes the sum of squares of the RMSD between neighbours in a given path. Serves
-        as the energy function in the MC sampling."""
+        as the energy function in the MC sampling.
+        
+        :param path: Path of :class:`MDAnalysis.Universe` objects.
+        :type path: list
+        
+        :return: Sum of squares of RMSD between neighbours, acting as energy function.
+        :rtype: float"""
         energy = 0
         for i in range(len(path) - 1):
             energy += np.square(
@@ -125,7 +139,24 @@ class MCPathSampler:
         seed=None,
     ):
         """This is a simple MC run procedure for our system. Returns the minimum energy configuration as
-        a tuple (min_configuration,  min_energy)."""
+        a tuple (min_configuration,  min_energy).
+        
+        :param name: Name of the folder in which to store the results.
+        :type name: str
+        :param number_of_steps: How many MC steps to perform.
+        :type number_of_steps: int
+        :param annealing_progression: Stepwise list of temperatures to use for annealing. If None, no annealing is performed. Defaults to None.
+        :type annealing_progression: list, optional
+        :param path: Initial path to start from. If None, a random path is generated. Defaults to None.
+        :type path: list, optional
+        :param verbose: Whether to print out the progress of the MC run. Defaults to False.
+        :type verbose: bool, optional
+        :param seed: Seed for the random number generator. If None, gets randomly assigned from python random generator. Defaults to None.
+        :type seed: int, optional
+        
+        :return: Minimum energy configuration (path as list of Universes) and its energy.
+        :rtype: tuple"""
+
 
         # prepare folder
         local_path = self.FOLDER + name
@@ -136,7 +167,7 @@ class MCPathSampler:
             path = self.__initialize_path()
         if not seed is None:
             np.random.seed(seed)
-        energy = self.__path_energy_function(path)
+        energy = self.path_energy_function(path)
         temperature = self.STARTING_TEMPERATURE
 
         trajectory = []
@@ -152,7 +183,7 @@ class MCPathSampler:
 
             # Monte Carlo logic
             (new_path, changed_index) = self.__propose_step(path)
-            delta_energy = self.__path_energy_function(new_path) - energy
+            delta_energy = self.path_energy_function(new_path) - energy
             if self.__metropolis(delta_energy, temperature):
                 path = new_path
                 energy += delta_energy
@@ -184,7 +215,7 @@ class MCPathSampler:
         return (min_configuration, min_energy)
 
     def sample_path(self, poolsize=12):
-        """This function the MC sampling on a multiprocessing pool of the desired size.
+        """Perform the MC sampling using a multiprocessing pool of the desired size.
 
         :param poolsize: How many multiprocessing instances to use. Setting 1 bypasses multiprocessing, defaults to 12
         :type poolsize: int, optional

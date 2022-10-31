@@ -7,17 +7,19 @@ import numpy as np
 
 
 def get_monitor_value_from_xtc(
-    PLUMED_PATH: str, file_to_process: str, plumed_monitor_file: str
+     file_to_process: str, plumed_monitor_file: str, PLUMED_PATH :str = 'plumed',
 ):
-    """This uses plumed to extract the value of a CV from the last frame of an xtc file.
+    """Use plumed to extract the average value of a CV from an xtc file.
 
-    :param PLUMED_PATH: Path to the plumed executable.
-    :type PLUMED_PATH: str
+    
     :param file_to_process: Path to the xtc file to be analysed.
     :type file_to_process: str
     :param plumed_monitor_file: Path to the plumed input file, should print to COLVAR_MONITOR
     :type plumed_monitor_file: str
-    :return: Value of the CV for the xtc file, last frame.
+    :param PLUMED_PATH: Path to the plumed executable.
+    :type PLUMED_PATH: str, optional
+
+    :return: Average value of the CV in the xtc file.
     :rtype: float
     """
     subprocess.call(

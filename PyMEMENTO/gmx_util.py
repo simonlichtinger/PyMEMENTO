@@ -1,4 +1,4 @@
-""" This script contains some useful functions for running gromacs commands from this package. """
+""" Some useful functions for running gromacs commands to be used by PyMEMENTO. Uses gromacswrapper."""
 
 import shutil
 import subprocess
@@ -15,7 +15,7 @@ from os.path import join
 
 
 def crop_top_to_itp(file: str):
-    """This will crop a .top file to a .itp file, removing the original file.
+    """Crop a .top file to an .itp file, removing the original file.
 
     :param file: .top tile to be processed.
     :type file: str
@@ -48,13 +48,13 @@ def pdb2gmx(
     asp_protonation_states=[],
     cap_type="AMBER",
 ):
-    """This runs gmx pdb2gmx on a given pdb file.
+    """Run gmx pdb2gmx on a given pdb file.
 
-    :param file_to_process: Path to the pdb file in question.
+    :param file_to_process: Path to the pdb file.
     :type file_to_process: str
-    :param folder_path: Path to the parent folder of the pdb file in question.
+    :param folder_path: Path to the parent folder of the pdb file.
     :type folder_path: str
-    :param ignh: Whether or not to pass the "-ignh" flag, defaults to True
+    :param ignh: Whether or not to pass the "-ignh" flag, ie rebuild hydrogen atoms, defaults to True
     :type ignh: bool, optional
     :param his: Whether or not to manually set his protonation states for consistency, defaults to False
     :type his: bool, optional
@@ -125,7 +125,7 @@ def pdb2gmx(
 
 
 def get_cubic_boxsize(file_to_process: str, folder_path: str, spacing: float):
-    """This function takes a structure file and estimates its cubix boxsize at a given spacing from
+    """Estimate the cubic boxsize including a given spacing from
     the box edge.
 
     :param file_to_process: Path to the file to be analysed.
@@ -156,7 +156,7 @@ def get_cubic_boxsize(file_to_process: str, folder_path: str, spacing: float):
 
 
 def create_box(file_to_process: str, padding: float = 1.0):
-    """This overwrites a coordinate file with one where a box of defined padding around is created.
+    """Overwrite a coordinate file with one where a cubic box of defined padding around is created.
 
     :param file_to_process: Path to the coordinate file to process
     :type file_to_process: str
@@ -218,13 +218,13 @@ def solvate_ions(
     ion_concentration: float,
     maxsol=1000000,
 ):
-    """This function solvates a box which is without solvent.
+    """Solvate a box which has box size but no solvent present.
 
     :param file_to_process: Path to the file to solvate.
     :type file_to_process: str
     :param folder_path: Path to the folder in which to solvate.
     :type folder_path: str
-    :param ion_concentration: Desired ion ion concentration (NaCl).
+    :param ion_concentration: Desired ion concentration (NaCl).
     :type ion_concentration: float
     :param maxsol: Number of solvent molecules to maximally insert, defaults to 1000000
     :type maxsol: int, optional
@@ -273,7 +273,7 @@ def minimize(
     grompp_flags={},
     mdrun_flags={},
 ):
-    """Energy-minimize a box.
+    """Energy-minimize a box. A minim.mdp file is required in the folder.
 
     :param file_to_process: Path to the file to minimize.
     :type file_to_process: str
@@ -285,7 +285,7 @@ def minimize(
     :type grompp_flags: dict, optional
     :param mdrun_flags: Extra flags to pass to gmx mdrun, eg related to gpu and cores (eg. {'ntomp': 6}), defaults to {}
     :type mdrun_flags: dict, optional
-    :return: Number of the overlapping atom, if failed. None if this worked.
+    :return: ID of the overlapping atom, if failed. None if this worked.
     :rtype: int
     :raises ValueError: something went wrong with the minimizaion, but not atom overlap!
     """
@@ -373,9 +373,14 @@ def generate_membrane_index(file_to_process: str, folder_path: str):
     )
 
 
-def stretch_relative(to_strech, anchor, scale_factor: float):
-    """This acts on a Universe or AtomGroup to stretch it relative to the center of geometry of another Universe,
-    in the x-y plane."""
+def stretch_relative(to_strech: mda.Universe, anchor: mda.Universe, scale_factor: float):
+    """Act on a Universe or AtomGroup to stretch it relative to the center of geometry of another Universe,
+    in the x-y plane.
+    
+    :param to_strech: Universe or AtomGroup to stretch.
+    :type to_strech: MDAnalysis.Universe or MDAnalysis.AtomGroup
+    :param anchor: Universe or AtomGroup to use as the center of geometry.
+    :type anchor: MDAnalysis.Universe or MDAnalysis.AtomGroup"""
     center = anchor.atoms.center(None)
     for atom in to_strech.atoms:
         atom.position = np.array(
@@ -388,7 +393,12 @@ def stretch_relative(to_strech, anchor, scale_factor: float):
 
 
 def stretch_boxsize(boxsize_line: str, scale_factor: float):
-    """Returns a scaled box-size string, in gro formatting."""
+    """Scale box-size string in gro formatting by a scale_factor.
+    
+    :param boxsize_line: Box-size line in gro file format.
+    :type boxsize_line: str
+    :param scale_factor: Scale factor to apply to box-size.
+    :type scale_factor: float"""
     scale = [scale_factor, scale_factor, 1]  # only in x-y plane!
     dimenions = [
         round(float(x) * scale[n], 5) for n, x in enumerate(boxsize_line.split())
@@ -397,7 +407,12 @@ def stretch_boxsize(boxsize_line: str, scale_factor: float):
 
 
 def change_boxsize(file_to_process: str, boxsize_line: str):
-    """Changes the dimensions of a file to values specified by a gro-formatted string."""
+    """Change the dimensions of a file to values specified by a gro-formatted string.
+    
+    :param file_to_process: Path to the coordinate file to process.
+    :type file_to_process: str
+    :param boxsize_line: box size in format of last line of gro file
+    :type boxsize_line: str"""
     dimenions = [float(x) * 10 for x in boxsize_line.split()]  # nm -> A
     u = mda.Universe(file_to_process)
     print(dimenions)
@@ -416,7 +431,7 @@ def embed_in_lipids(
     steps=5,
     mdrun_flags={},
 ):
-    """Embed a protein in lipids, which already have the rough protein shape cup out, but there may be
+    """Embed a protein in lipids (eg from a related conformational state), which already have the rough protein shape cut out, but there may be overlaps.
 
     :param protein_path: Path to the protein coordinate file.
     :type protein_path: str
@@ -424,7 +439,7 @@ def embed_in_lipids(
     :type lipid_path: str
     :param folder_path: Path to the folder in which to work.
     :type folder_path: str
-    :param lipid_selection: String by which to select lipids
+    :param lipid_selection: MDAnalysis selecttion string for the lipids
     :type lipid_selection: str
     :param boxsize_line: Last line of the original lipid gro file.
     :type boxsize_line: str
@@ -434,7 +449,7 @@ def embed_in_lipids(
     :type starting_scale: float, optional
     :param steps: Number of steps of energy minimisation, defaults to 5
     :type steps: int, optional
-    :param mdrun_flags: Extra flags to pass to gmx mdrun, eg related to gpu and cores (eg. {'ntomp': 6}), defaults to {}
+    :param mdrun_flags: Extra flags to pass to gmx mdrun, related to gpu and cores etc (eg. {'ntomp': 6}), defaults to {}
     :type mdrun_flags: dict, optional
     """
     boxsize = boxsize_line

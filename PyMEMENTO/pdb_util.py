@@ -7,7 +7,7 @@ from MDAnalysis.analysis import align
 def cap_termini(
     inpath: str, outpath: str, reference: str, first_res: int, last_res: int
 ):
-    """This function patches a protein with termini, as specified in a reference structure.
+    """Patch a protein with termini, as specified in a reference structure.
 
     :param inpath: Path to the pdb file to be processed.
     :type inpath: str
@@ -15,9 +15,9 @@ def cap_termini(
     :type outpath: str
     :param reference: Path to the reference pdb file. This contains a 4-amino acid sequence: cap-nterm-cterm-cap.
     :type reference: str
-    :param first_res: Number of the first residue (onto which to attach the cap).
+    :param first_res: Number of the first residue in the inpath file (onto which to attach the cap).
     :type first_res: int
-    :param last_res: Number of the last residue (onto which to attach the cap).
+    :param last_res: Number of the last residue in the inpath file (onto which to attach the cap).
     :type last_res: int
     """
     # Load the pdb files for protein and reference termini
@@ -55,7 +55,14 @@ def cap_termini(
 
 
 def sed(path, replace, by):
-    """Find and replace within a file."""
+    """Find and replace within a file.
+    
+    :param path: Path to the file to be modified.
+    :type path: str
+    :param replace: String to be replaced.
+    :type replace: str
+    :param by: String to replace with.
+    :type by: str"""
     with open(path, "r") as f:
         lines = f.readlines()
     lines_out = []
@@ -66,14 +73,14 @@ def sed(path, replace, by):
 
 
 def fix_residue_numbers(inpath: str, outpath: str, corrected_residue_numbers: list):
-    """This modifies the residue numbers in a pdb file to reach a target sequence.
+    """Modify the residue numbers in a pdb file to reach a target sequence.
 
     :param inpath: Path to the origin pdb file
     :type inpath: str
     :param outpath: Where to write the modifed pdb file to.
     :type outpath: str
     :param corrected_residue_numbers: List with the desired residue numbers.
-    :type corrected_residue_numbers: list
+    :type corrected_residue_numbers: list<int>
     """
     with open(inpath) as f:
         data = f.readlines()

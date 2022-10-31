@@ -8,3 +8,4 @@ __pycache__
 .pytest_cache
 .vscode
 .coverage
+docs/_build

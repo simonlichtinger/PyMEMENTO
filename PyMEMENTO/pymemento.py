@@ -32,7 +32,8 @@ from os.path import join
 
 
 class MEMENTO:
-    """The MEMENTO class is the core handle for interacting with the modelling system."""
+    """The MEMENTO class is the core handle for interacting with the modelling system. See the examples section\
+        on how to sequentially use its functions."""
 
     def __init__(
         self,
@@ -62,8 +63,10 @@ class MEMENTO:
         :type lipid: str, optional
         :param ligand: Ligand selectio string for ligand in the binding pocket, which is to be moved during morphing, defaults to None
         :type ligand: str, optional
-        :param ligand: Determines whether the ligand is treated as 'rigid' and only the COM is moved, or whether it should be morphed as 'single' atoms, defaults to 'rigid'
-        :type ligand: str, optional
+        :param ligand_type: Determines whether the ligand is treated as 'rigid' and only the COM is moved, or whether it should be morphed as 'single' atoms, defaults to 'rigid'
+        :type ligand_type: str, optional+
+        :param PLUMED_PATH: Path to the plumed executable, defaults to 'plumed'
+        :type PLUMED_PATH: str, optional
         """
         self.PLUMED_PATH = PLUMED_PATH
         self.universe_start = mda.Universe(start_file)
@@ -120,12 +123,12 @@ class MEMENTO:
     def morph(
         self, number_of_intermediates: int, fitting_selection="protein and name CA"
     ):
-        """This function morphs between the start and target structures which the class
-        already holds (from constructor), with a fiven number of intermediate.
+        """Calculate linear morphs between start and target structures which the class
+        already holds (from constructor), with a given number of intermediates.
 
-        :param number_of_intermediates: How many frames should there be in total.
+        :param number_of_intermediates: How many frames to create.
         :type number_of_intermediates: int
-        :param fitting_selection: MDAnalysis selection string for fitting, defaults to "protein and name CA"
+        :param fitting_selection: :class:`MDAnalysis` selection string for fitting, defaults to "protein and name CA"
         :type fitting_selection: str, optional
         """
 
@@ -205,7 +208,7 @@ class MEMENTO:
         self.morph_done = True
 
     def make_models(self, number_of_models: int, include_residues=None, poolsize=12):
-        """This function uses the modeller package to model based on the morphs already
+        """Use the modeller package to generate fixed models based on the morphs already
         present in the folder structure. Caps are removed at this stage.
 
         :param number_of_models: How many models to generate.
@@ -274,16 +277,18 @@ class MEMENTO:
     def find_best_path(
         self, mc_starting_temp=50, mc_steps=10000, mc_replicates=12, poolsize=1
     ):
-        """This calls up an MCPathSampler instance to construct optimum RMSD paths
+        """Call up an :class:`.MCPathSampler` instance to construct optimum RMSD paths
         through the space of the generated models.
 
         :param mc_starting_temp: 'Temperature' at which to start simulated annealing, defaults to 50
         :type mc_starting_temp: int, optional
         :param mc_steps: Number of MC steps to perform, defaults to 10000
         :type mc_steps: int, optional
-        :param mc_replicates: Number of MC replicate to perform, defaults to 12
+        :param mc_replicates: Number of MC replicates to perform, defaults to 12
         :type mc_replicates: int, optional
-        :param poolsize: Number of processes to spawn to speed up calculations, defaults to 1
+        :param poolsize: Number of processes to spawn to speed up calculations, defaults to 1. **Note:** \
+            With large universes this can cause memory issues because of an apparent bug in how MDAnalysis handles many open
+            files in multiple processes, hence the default is 1.
         :type poolsize: int, optional
         """
 
@@ -317,30 +322,31 @@ class MEMENTO:
         asp=False,
         asp_protonation_states=[],
     ):
-        """This performs several processing steps on the identified minimal RMSD path:
+        """Perform several processing steps on the identified minimal RMSD path:
         fixing residue numbers, aligning with starting structure, capping termini (optional) and adding H atoms
         via the use of 'gmx pdb2gmx'.
 
-        :param residue_numbers: A list of residue numbers which the protein residues should have after processing.
+        :param residue_numbers: A list of residue numbers which the protein residues should have after processing\
+            (use this to take care of starting points other than 1, for example).
         :type residue_numbers: list
         :param caps: Whether or not to add ACE and NME caps, defaults to True
         :type caps: bool, optional
-        :param cap_type: Can be 'AMBER' or 'CHARMM', defaults to 'AMBER'
+        :param cap_type: Caps can be of the 'AMBER' or 'CHARMM' forcefield types, defaults to 'AMBER'
         :type caps_type: str, optional
-        :param proline_n_term: Whether or not the N-term should be capped with
+        :param proline_n_term: Whether or not the N-term should be capped with \
         the dihedral angle preferences of a proline, defaults to False
         :type proline_n_term: bool, optional
         :param his: Whether or not his protonation states should be chosen manually, defaults to False
         :type his: bool, optional
-        :param his_protonation_states: Those his protonation states which should be chosen, defaults to []
+        :param his_protonation_states: Those his protonation states which should be chosen (as integers prompted by pdb2gmx) , defaults to []
         :type his_protonation_states: list, optional
         :param glu: Whether or not glu protonation states should be chosen manually, defaults to False
         :type glu: bool, optional
-        :param glu_protonation_states: Those glu protonation states which should be chosen, defaults to []
+        :param glu_protonation_states: Those glu protonation states which should be chosen (as integers prompted by pdb2gmx), defaults to []
         :type glu_protonation_states: list, optional
-        :param asp Whether or not asp protonation states should be chosen manually, defaults to False
+        :param asp: Whether or not asp protonation states should be chosen manually, defaults to False
         :type asp: bool, optional
-        :param asp_protonation_states: Those asp protonation states which should be chosen, defaults to []
+        :param asp_protonation_states: Those asp protonation states which should be chosen (as integers prompted by pdb2gmx), defaults to []
         :type asp_protonation_states: list, optional
         """
 
@@ -467,13 +473,14 @@ class MEMENTO:
         embedding_end_scale=0.95,
         embedding_steps=5,
     ):
-        """This aggregates all required files for starting to run.
+        """Aggregate all required files for starting to run and preprocess them in gromacs. Combine with ligand and embed in lipids 
+        (by a procedure akin to inflate_gro) if appopriate.
 
-        :param template_folder: Specify a template folder containing mdp inputs for minim, nvt, npt, prod_sc, and prod;
-        a template topology as well as a submission script, defaults to None, which sources a folder form the data
-        suitable for a basic protein in water.
+        :param template_folder: Specify a template folder containing mdp inputs for minim, nvt, npt, prod_sc, and prod;\
+        a template topology as well as a submission script. Defaults to None (which sources a folder form the data \
+        suitable for a basic protein in water)
         :type template_folder: str, optional
-        :param mdrun_flags: Extra flags to pass to gmx mdrun, eg related to gpu and cores (eg. {'ntomp': 6}), defaults to {}
+        :param mdrun_flags: Extra flags to pass to gmx mdrun, related to gpu and cores etc (eg. {'ntomp': 6}), defaults to {}
         :type mdrun_flags: dict, optional
         :param starting_scale: Parameter for lipid embedding, factor by which the system should initially be stretched, defaults to 1.15
         :type starting_scale: float, optional
@@ -623,9 +630,9 @@ class MEMENTO:
         self.solvation_done = True
 
     def minimize_boxes(self, mdrun_flags=""):
-        """This performs an energy minimization on the prepared boxes.
+        """Perform an energy minimizations on the prepared boxes in the folder structure.
 
-        :param mdrun_flags: Extra flags to pass to gmx mdrun, eg related to gpu and cores (eg. {'ntomp': 6}), defaults to {}
+        :param mdrun_flags: Extra flags to pass to gmx mdrun, related to gpu and cores etc (eg. {'ntomp': 6}), defaults to {}
         :type mdrun_flags: dict, optional
         """
 
@@ -664,21 +671,21 @@ class MEMENTO:
         smoothen_ladder: float = 0,
         folder_name: str = "umbrella/",
     ):
-        """Prepare umbrella sampling simulations from equilibrated boxes prepared using PyMEMENTO.
+        """Prepare umbrella sampling simulations from equilibrated boxes.
         Appropriate input files for plumed must be provided. Also provides 'metadata.dat' which
         is an input file for the grossfield wham implementation.
 
-        :param plumed_monitor_file: Path to a plumed input file that prints the CV of interest at stride 1.
+        :param plumed_monitor_file: Path to a plumed input file that prints the CV of interest at stride 1 to file COLVAR_MONITOR.
         :type plumed_monitor_file: str
-        :param plumed_umbrella_file: Path to a plumed input file will be used for umbrella sampling. Must contain
-        $REPLICAS$, which is replaced with the determined CV values. Should have KAPPA set, which is read by this function.
+        :param plumed_umbrella_file: Path to a plumed input file that will be used for umbrella sampling. Must contain \
+        the string $REPLICAS$, which is replaced with the determined CV values. Should have KAPPA set, which is read by this function. 
         :type plumed_umbrella_file: str
-        :param run_scripts: List of paths that should be copied into the umbrella sampling folder, eg. run scripts etc, defaults to []
+        :param run_scripts: List of file paths that should be copied into the umbrella sampling folder, eg. run scripts etc, defaults to []
         :type run_scripts: list, optional
-        :param extra_plumed_files: List of paths that are required for running plumed driver for monitoring CVs.
+        :param extra_plumed_files: List of file paths that are required for running plumed driver for monitoring CVs. \
         Also copied into umbrella path, defaults to []
         :type extra_plumed_files: list, optional
-        :param smoothen_ladder: Smoothen the CV ladder for umbrella sampling by linear interpolation between the
+        :param smoothen_ladder: Smoothen the CV ladder for umbrella sampling by linear interpolation between the \
         observed CV values from the box equilibrations and an equidistant ladder. Defaults to 0, which means no smoothening.
         :type smoothen_ladder: float, optional
         :param folder_name: Name of the umbrella sampling folder to be created, defaults to "umbrella/"
@@ -700,9 +707,9 @@ class MEMENTO:
                 # Extract cenre of the CV for this umbrella window
                 CV_values.append(
                     get_monitor_value_from_xtc(
-                        self.PLUMED_PATH,
                         join(box_folder, "prod_sc.xtc"),
                         plumed_monitor_file,
+                        PLUMED_PATH=self.PLUMED_PATH,
                     )
                 )
 
