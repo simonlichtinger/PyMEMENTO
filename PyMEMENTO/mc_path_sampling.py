@@ -199,6 +199,7 @@ class MCPathSampler:
         print("Done MC run. Dumping trajectory and energies.")
         plt.plot(energy_progression)
         plt.savefig(local_path + "trajectory.pdf")
+        plt.clf() # was plt.close()
         plt.close()
 
         # Write full trajectory and energies to file

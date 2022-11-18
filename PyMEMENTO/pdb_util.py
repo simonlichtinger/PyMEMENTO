@@ -91,13 +91,13 @@ def fix_residue_numbers(inpath: str, outpath: str, corrected_residue_numbers: li
     counter = -1
     for line in data:
         if line[:4] == "ATOM":
-            res_num = int(line[23:26])
+            res_num = int(line[22:26])
             if res_num != previous_resnum:
                 previous_resnum = res_num
                 counter += 1
             dataout.append(
-                line[:23]
-                + str(corrected_residue_numbers[counter]).rjust(3, " ")
+                line[:22]
+                + str(corrected_residue_numbers[counter]).rjust(4, " ")
                 + line[26:]
             )
         else:

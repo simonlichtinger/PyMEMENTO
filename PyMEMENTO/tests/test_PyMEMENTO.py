@@ -28,8 +28,8 @@ TESTING_MDRUN_FLAGS = {}
 
 # Switch to these paths and change with tmpdir.as_cwd(): for with tmp2dir.as_cwd(): in order to
 # run the tests locally instead of a tmp folder, for diagnostic purposes.
-#    tmp2dir = py.path.local("testrun/")
-#    tmp2dir.mkdir()
+#    tmpdir = py.path.local("debuggin_run/")
+#    tmpdir.mkdir()
 
 
 def test_workflow_nolipids(tmpdir):
@@ -37,9 +37,6 @@ def test_workflow_nolipids(tmpdir):
     whether the workflow can finish running -- as checked by the
     existance of the expected terminal file."""
 
-    # Uncomment ot run locally and not in tmp folder.
-    # tmpdir = py.path.local("testrun/")
-    # tmpdir.mkdir()
 
     with tmpdir.as_cwd():
         model = MEMENTO(
@@ -106,9 +103,6 @@ def test_multiprocessing_coverage():
 def test_simplistic_ligand(tmpdir):
     """Use decalanine with an added ligand to test whether those codepaths work."""
 
-    # tmpdir = py.path.local("testrun2/")
-    # tmpdir.mkdir()
-
     with tmpdir.as_cwd():
         model = MEMENTO(
             "testrun/",
@@ -134,9 +128,6 @@ def test_simplistic_ligand(tmpdir):
 def test_simplistic_ligand_peptide(tmpdir):
     """Test that a peptide ligand, which gmx doesn't differentiate
     from the protein in index files, work correctly."""
-
-    # tmpdir = py.path.local("testrun2/")
-    # tmpdir.mkdir()
 
     with tmpdir.as_cwd():
         model = MEMENTO(
@@ -272,6 +263,7 @@ def test_lipid_setup(tmpdir):
     """Test whether a realisitc lipid membrane can be handled, using the LEUT example system.
     Perform only one EM step, and only check that the embedding EM ran correctly, to save time. This is
     a slow test and will be skipped unless --runslow is passed to pytest."""
+
     with tmpdir.as_cwd():
         model = MEMENTO(
             "testrun/",

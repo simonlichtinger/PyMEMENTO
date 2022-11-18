@@ -47,6 +47,7 @@ def pdb2gmx(
     asp=False,
     asp_protonation_states=[],
     cap_type="AMBER",
+    multi_chain=False
 ):
     """Run gmx pdb2gmx on a given pdb file.
 
@@ -70,6 +71,9 @@ def pdb2gmx(
     :type asp_protonation_states: list, optional
     :param cap_type: Can be 'AMBER' or 'CHARMM', defaults to 'AMBER'
     :type cap_type: str, optional
+    :param multi_chain: Whether or not the protein has multiple chains, determines whether PyMEMENTO tried to \
+        edit the generated top file into an itp, or keep the individual chain itp files. Defaults to False.
+    :type multi_chain: bool, optional
     """
     # Set correct paths for everything
     root = file_to_process.split(".pdb")[-2]
@@ -117,11 +121,12 @@ def pdb2gmx(
     )
 
     # Process output
-    sed(topol_output_file, "Protein_chain_A", "Protein")
-    crop_top_to_itp(topol_output_file)
+    if not multi_chain:
+        sed(topol_output_file, "Protein_chain_A", "Protein")
+        crop_top_to_itp(topol_output_file)
 
-    # remove temporary files
-    os.remove("posre.itp")
+        # remove temporary files
+        os.remove("posre.itp")
 
 
 def get_cubic_boxsize(file_to_process: str, folder_path: str, spacing: float):
@@ -401,7 +406,7 @@ def stretch_boxsize(boxsize_line: str, scale_factor: float):
     :type scale_factor: float"""
     scale = [scale_factor, scale_factor, 1]  # only in x-y plane!
     dimenions = [
-        round(float(x) * scale[n], 5) for n, x in enumerate(boxsize_line.split())
+        round(float(x) * scale[n], 5) if n < 3 else round(float(x), 5) for n, x in enumerate(boxsize_line.split())
     ]
     return "".join([str(x).rjust(10) for x in dimenions]) + "\n"
 
@@ -413,10 +418,18 @@ def change_boxsize(file_to_process: str, boxsize_line: str):
     :type file_to_process: str
     :param boxsize_line: box size in format of last line of gro file
     :type boxsize_line: str"""
-    dimenions = [float(x) * 10 for x in boxsize_line.split()]  # nm -> A
+    dimensions = [float(x) * 10 for x in boxsize_line.split()]  # nm -> A
     u = mda.Universe(file_to_process)
-    print(dimenions)
-    u.dimensions = np.array(dimenions + [90, 90, 90])
+
+    # Deal with hexagonal boxes, which will have additional box vectors in columns 4 to 6
+    if len(dimensions) == 3:
+        dimensions_out = dimensions + [90, 90, 90]
+    elif dimensions[3] == 0 and dimensions[4] == 0 and dimensions[5] > 59 and dimensions[5] <61:
+        dimensions_out = dimensions[:3] + [90,90,60]
+    else:
+        raise ValueError(f"The box vectors {boxsize_line} are not of a supported cubic or hexagonal type.")
+
+    u.dimensions = np.array(dimensions_out)
     u.atoms.write(file_to_process)
 
 

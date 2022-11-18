@@ -8,7 +8,7 @@ from glob import glob
 from os.path import join
 
 
-def create_ali_file(pdb_file: str, out_path: str, include_residues: list, ali_file_name: str = "morph->protein.ali"):
+def create_ali_file(pdb_file: str, out_path: str, include_residues: list, ali_file_name: str = "morph->protein.ali", use_all_chains = False):
     """Create the *.ali file which is necessary for modelling. In this case,
     the only differnce between knowns and sequence is removing the caps.
 
@@ -20,6 +20,9 @@ def create_ali_file(pdb_file: str, out_path: str, include_residues: list, ali_fi
     :type include_residues: list<int>
     :param ali_file_name: Name of the ali file to be written, defaults to "morph->protein.ali"
     :type ali_file_name: str, optional
+    :param use_all_chains: Whether to use all chains of a mutiple-domain protein. If False, only chain 'X' (as written by MDAnalysis\
+        for a protein which didn't have any chain identifiers) is used. If True, use all residues that were present in the original coordinate file. Defaults to False.
+    :type ali_file_name: bool, optional
     """
 
     env = Environ()
@@ -32,9 +35,13 @@ def create_ali_file(pdb_file: str, out_path: str, include_residues: list, ali_fi
     start_count = min(include_residues)
     end_count = max(include_residues)
 
-    mdl = Model(
-        env, file=pdb_file, model_segment=(f"{start_count}:X", f"{end_count}:X")
-    )
+    if use_all_chains:
+        mdl = Model(env, file=pdb_file)
+    else:
+        mdl = Model(
+            env, file=pdb_file, model_segment=(f"{start_count}:X", f"{end_count}:X")
+        )
+
     aln.append_model(mdl, align_codes="protein", atom_files=pdb_file)
     aln.align2d()
     aln.write(file=join(out_path, ali_file_name), alignment_format="PIR")

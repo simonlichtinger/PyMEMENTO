@@ -9,3 +9,5 @@ __pycache__
 .vscode
 .coverage
 docs/_build
+testrun
+testing_alpha7

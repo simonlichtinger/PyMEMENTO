@@ -29,6 +29,7 @@ from .gmx_util import (
 )
 from .plumed_util import get_monitor_value_from_xtc
 from os.path import join
+from pathlib import Path
 
 
 class MEMENTO:
@@ -46,6 +47,8 @@ class MEMENTO:
         ligand=None,
         ligand_type="rigid",
         PLUMED_PATH="plumed",
+        multiple_chains=None,
+        last_step_performed=""
     ):
         """Constructor for the MEMENTO class, which takes some initial information that every modelling run must provide.
 
@@ -64,13 +67,22 @@ class MEMENTO:
         :param ligand: Ligand selectio string for ligand in the binding pocket, which is to be moved during morphing, defaults to None
         :type ligand: str, optional
         :param ligand_type: Determines whether the ligand is treated as 'rigid' and only the COM is moved, or whether it should be morphed as 'single' atoms, defaults to 'rigid'
-        :type ligand_type: str, optional+
+        :type ligand_type: str, optional
         :param PLUMED_PATH: Path to the plumed executable, defaults to 'plumed'
         :type PLUMED_PATH: str, optional
+        :param multiple_chains: If the protein contains multiple chains, pass a list of lists of chain identifiers, \
+            eg ["A","A","A","B","B","B","C","C","C"] for a trimer which has residue numbers 1-3 in chain A, 4-6 in chain B and 7-9 in chain C, defaults to None
+        :type multiple_chains: list<str>, optional
+        :param last_step_performed: If a previous run has already done some of the steps in the appropriate folder strucutre, pass the last step that was done\
+            with this keyword argument to override order consistency checking. Can be 'modelling', 'pathfinding', 'processing' or 'boxpreparation'. Defaults to ''
+        :type last_step_performed: str, optional
         """
         self.PLUMED_PATH = PLUMED_PATH
-        self.universe_start = mda.Universe(start_file)
-        self.universe_target = mda.Universe(target_file)
+
+        # convert starting and end universes paths into absolute paths, as we'll be changing directories
+
+        self.universe_start = mda.Universe(Path(start_file).absolute())
+        self.universe_target = mda.Universe(Path(target_file).absolute())
         self.working_dir = working_dir
         self.ligand = ligand
         self.ligand_type = ligand_type
@@ -109,6 +121,23 @@ class MEMENTO:
         else:
             self.boxsize_line = None
 
+        # if we have multiple chains, record this, and fix chains in the universe
+
+        self.multiple_chains = multiple_chains
+
+        if multiple_chains != None:
+            self.universe_start.add_TopologyAttr("chainID")
+
+            for r,res in enumerate(self.universe_start.select_atoms("protein").residues):
+                for atom in res.atoms:
+                    atom.chainID=multiple_chains[r]
+
+
+            self.universe_target.add_TopologyAttr("chainID")
+            for r,res in enumerate(self.universe_target.select_atoms("protein").residues):
+                for atom in res.atoms:
+                    atom.chainID=multiple_chains[r]
+
         # Create working directory if necessary
         os.makedirs(working_dir, exist_ok=True)
 
@@ -119,6 +148,24 @@ class MEMENTO:
         self.modelprocessing_done = False
         self.boxpreparation_done = False
         self.solvation_done = False
+
+        # Continue from a previous run if appropriate
+
+        if last_step_performed=='modelling':
+            self.modelling_done=True
+        if last_step_performed=='pathfinding':
+            self.pathfinding_done=True
+        if last_step_performed=='processing':
+            self.modelprocessing_done=True
+        if last_step_performed=='boxpreparation':
+            self.boxpreparation_done=True
+        if last_step_performed=='solvation':
+            self.solvation_done=True
+        
+        if last_step_performed != '':
+            # fetch number of morphing intermediates from folder structure
+            self.number_of_intermediates = len(glob(join(self.working_dir, "morphing/frame*.pdb")))
+            self.number_of_models = len(glob(join(self.working_dir, "modeller/morph0/protein.B9999*.pdb")))
 
     def morph(
         self, number_of_intermediates: int, fitting_selection="protein and name CA"
@@ -246,10 +293,17 @@ class MEMENTO:
                 os.makedirs(frame_path, exist_ok=True)
 
             # Prepare one ali file, copy for each intermediate
+
+            if self.multiple_chains != None:
+                use_all_chains = True
+            else:
+                use_all_chains = False
+
             create_ali_file(
                 f"morphing/frame0.pdb",
                 join(local_path, "morph0/"),
                 include_residues,
+                use_all_chains=use_all_chains
             )
             for i in range(1, self.number_of_intermediates):
                 shutil.copyfile(
@@ -447,15 +501,26 @@ class MEMENTO:
                     asp=asp,
                     asp_protonation_states=asp_protonation_states,
                     cap_type=cap_type,
+                    multi_chain=(self.multiple_chains!=None)
                 )
                 shutil.move(
                     join(local_path, file_root + str(n) + ".gro"),
                     join(local_path, f"processed{n}.gro"),
                 )
-                shutil.move(
-                    join(local_path, file_root + str(n) + ".itp"),
-                    join(local_path, f"processed{n}.itp"),
-                )
+
+                # see whether we'll have one protein itp file or several
+                if self.multiple_chains:
+                    unique_chain_ids = set(self.multiple_chains)
+                    for chain_id in unique_chain_ids:
+                        shutil.move(
+                            join(local_path, file_root + str(n) + f"_Protein_chain_{chain_id}.itp"),
+                            join(local_path, f"processed{n}_chain{chain_id}.itp"),
+                        )
+                else:
+                    shutil.move(
+                        join(local_path, file_root + str(n) + ".itp"),
+                        join(local_path, f"processed{n}.itp"),
+                    )
 
             # Remove the forcefield again from our root directory
             for ff in self.forcefield_paths:
@@ -466,7 +531,6 @@ class MEMENTO:
 
     def prepare_boxes(
         self,
-        use_custom_template_folder: bool = False,
         template_folder: str = None,
         mdrun_flags={},
         embedding_starting_scale=1.15,
@@ -513,6 +577,9 @@ class MEMENTO:
                 via the template_folder keyword argument."
             )
 
+        # convert template folder into an absolute path if it isn't already
+        template_folder = Path(template_folder).absolute()
+
         # Set up folder structure
         with py.path.local(self.working_dir).as_cwd():
             local_path = "boxes/"
@@ -532,10 +599,19 @@ class MEMENTO:
                     f"processing/processed{n}.gro",
                     join(local_path, f"sim{n}/processed.gro"),
                 )
-                shutil.copyfile(
-                    f"processing/processed{n}.itp",
-                    join(local_path, f"sim{n}/protein.itp"),
-                )
+                if self.multiple_chains:
+                    unique_chain_ids = set(self.multiple_chains)
+                    for chain_id in unique_chain_ids:
+                        shutil.copyfile(
+                            join(f"processing/processed{n}_chain{chain_id}.itp"),
+                            join(local_path, f"sim{n}/topol_Protein_chain_{chain_id}.itp"),
+                        )
+                else:
+                    shutil.copyfile(
+                        f"processing/processed{n}.itp",
+                        join(local_path, f"sim{n}/protein.itp"),
+                    )
+                
 
             # Add the ligand back in if that is required, asssuming the template topology has it already
             if self.ligand != None:
@@ -562,9 +638,9 @@ class MEMENTO:
                         self.lipid,
                         self.boxsize_line,
                         mdrun_flags=mdrun_flags,
-                        starting_scale=1.15,
-                        end_scale=0.95,
-                        steps=5,
+                        starting_scale=embedding_starting_scale,
+                        end_scale=embedding_end_scale,
+                        steps=embedding_steps,
                     )
 
         # remember what we did
@@ -629,17 +705,27 @@ class MEMENTO:
         # remember what we did
         self.solvation_done = True
 
-    def minimize_boxes(self, mdrun_flags=""):
+    def minimize_boxes(self, mdrun_flags={}, grompp_flags={}):
         """Perform an energy minimizations on the prepared boxes in the folder structure.
 
         :param mdrun_flags: Extra flags to pass to gmx mdrun, related to gpu and cores etc (eg. {'ntomp': 6}), defaults to {}
+        :type mdrun_flags: dict, optional
+        :param mdrun_flags: Extra flags to pass to gmx grompp, (eg. {'maxwarn': 1}), defaults to {}
         :type mdrun_flags: dict, optional
         """
 
         if not self.solvation_done:
             raise RuntimeError("Need to solvate boxes before minimizing.")
 
+
         with py.path.local(self.working_dir).as_cwd():
+            # in case we are continuing from a previous step, we need to determine ligand residues again
+            if self.ligand != None:
+                ligand_universe = mda.Universe(f"morphing/ligand0.pdb")
+                self.ligand_residues = set([a.resid for a in ligand_universe.atoms])
+            else:
+                self.ligand_residues = []
+            
             local_path = "boxes/"
 
             for n in range(self.number_of_intermediates):
@@ -647,6 +733,7 @@ class MEMENTO:
                     join(local_path, f"sim{n}/solvated.gro"),
                     join(local_path, f"sim{n}/"),
                     mdrun_flags=mdrun_flags,
+                    grompp_flags=grompp_flags,
                 )
                 # Also generate backbone posre.itp files as we'll need them for equilibration
                 generate_posre(
