@@ -11,3 +11,4 @@ __pycache__
 docs/_build
 testrun
 testing_alpha7
+test_alpha7.py
