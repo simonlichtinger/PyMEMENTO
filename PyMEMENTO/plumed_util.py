@@ -7,11 +7,13 @@ import numpy as np
 
 
 def get_monitor_value_from_xtc(
-     file_to_process: str, plumed_monitor_file: str, PLUMED_PATH :str = 'plumed',
+    file_to_process: str,
+    plumed_monitor_file: str,
+    PLUMED_PATH: str = "plumed",
 ):
     """Use plumed to extract the average value of a CV from an xtc file.
 
-    
+
     :param file_to_process: Path to the xtc file to be analysed.
     :type file_to_process: str
     :param plumed_monitor_file: Path to the plumed input file, should print to COLVAR_MONITOR

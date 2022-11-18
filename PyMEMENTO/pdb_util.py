@@ -56,7 +56,7 @@ def cap_termini(
 
 def sed(path, replace, by):
     """Find and replace within a file.
-    
+
     :param path: Path to the file to be modified.
     :type path: str
     :param replace: String to be replaced.

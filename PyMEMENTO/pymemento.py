@@ -48,7 +48,7 @@ class MEMENTO:
         ligand_type="rigid",
         PLUMED_PATH="plumed",
         multiple_chains=None,
-        last_step_performed=""
+        last_step_performed="",
     ):
         """Constructor for the MEMENTO class, which takes some initial information that every modelling run must provide.
 
@@ -128,15 +128,18 @@ class MEMENTO:
         if multiple_chains != None:
             self.universe_start.add_TopologyAttr("chainID")
 
-            for r,res in enumerate(self.universe_start.select_atoms("protein").residues):
+            for r, res in enumerate(
+                self.universe_start.select_atoms("protein").residues
+            ):
                 for atom in res.atoms:
-                    atom.chainID=multiple_chains[r]
-
+                    atom.chainID = multiple_chains[r]
 
             self.universe_target.add_TopologyAttr("chainID")
-            for r,res in enumerate(self.universe_target.select_atoms("protein").residues):
+            for r, res in enumerate(
+                self.universe_target.select_atoms("protein").residues
+            ):
                 for atom in res.atoms:
-                    atom.chainID=multiple_chains[r]
+                    atom.chainID = multiple_chains[r]
 
         # Create working directory if necessary
         os.makedirs(working_dir, exist_ok=True)
@@ -151,21 +154,25 @@ class MEMENTO:
 
         # Continue from a previous run if appropriate
 
-        if last_step_performed=='modelling':
-            self.modelling_done=True
-        if last_step_performed=='pathfinding':
-            self.pathfinding_done=True
-        if last_step_performed=='processing':
-            self.modelprocessing_done=True
-        if last_step_performed=='boxpreparation':
-            self.boxpreparation_done=True
-        if last_step_performed=='solvation':
-            self.solvation_done=True
-        
-        if last_step_performed != '':
+        if last_step_performed == "modelling":
+            self.modelling_done = True
+        if last_step_performed == "pathfinding":
+            self.pathfinding_done = True
+        if last_step_performed == "processing":
+            self.modelprocessing_done = True
+        if last_step_performed == "boxpreparation":
+            self.boxpreparation_done = True
+        if last_step_performed == "solvation":
+            self.solvation_done = True
+
+        if last_step_performed != "":
             # fetch number of morphing intermediates from folder structure
-            self.number_of_intermediates = len(glob(join(self.working_dir, "morphing/frame*.pdb")))
-            self.number_of_models = len(glob(join(self.working_dir, "modeller/morph0/protein.B9999*.pdb")))
+            self.number_of_intermediates = len(
+                glob(join(self.working_dir, "morphing/frame*.pdb"))
+            )
+            self.number_of_models = len(
+                glob(join(self.working_dir, "modeller/morph0/protein.B9999*.pdb"))
+            )
 
     def morph(
         self, number_of_intermediates: int, fitting_selection="protein and name CA"
@@ -303,7 +310,7 @@ class MEMENTO:
                 f"morphing/frame0.pdb",
                 join(local_path, "morph0/"),
                 include_residues,
-                use_all_chains=use_all_chains
+                use_all_chains=use_all_chains,
             )
             for i in range(1, self.number_of_intermediates):
                 shutil.copyfile(
@@ -501,7 +508,7 @@ class MEMENTO:
                     asp=asp,
                     asp_protonation_states=asp_protonation_states,
                     cap_type=cap_type,
-                    multi_chain=(self.multiple_chains!=None)
+                    multi_chain=(self.multiple_chains != None),
                 )
                 shutil.move(
                     join(local_path, file_root + str(n) + ".gro"),
@@ -513,7 +520,10 @@ class MEMENTO:
                     unique_chain_ids = set(self.multiple_chains)
                     for chain_id in unique_chain_ids:
                         shutil.move(
-                            join(local_path, file_root + str(n) + f"_Protein_chain_{chain_id}.itp"),
+                            join(
+                                local_path,
+                                file_root + str(n) + f"_Protein_chain_{chain_id}.itp",
+                            ),
                             join(local_path, f"processed{n}_chain{chain_id}.itp"),
                         )
                 else:
@@ -604,14 +614,15 @@ class MEMENTO:
                     for chain_id in unique_chain_ids:
                         shutil.copyfile(
                             join(f"processing/processed{n}_chain{chain_id}.itp"),
-                            join(local_path, f"sim{n}/topol_Protein_chain_{chain_id}.itp"),
+                            join(
+                                local_path, f"sim{n}/topol_Protein_chain_{chain_id}.itp"
+                            ),
                         )
                 else:
                     shutil.copyfile(
                         f"processing/processed{n}.itp",
                         join(local_path, f"sim{n}/protein.itp"),
                     )
-                
 
             # Add the ligand back in if that is required, asssuming the template topology has it already
             if self.ligand != None:
@@ -717,7 +728,6 @@ class MEMENTO:
         if not self.solvation_done:
             raise RuntimeError("Need to solvate boxes before minimizing.")
 
-
         with py.path.local(self.working_dir).as_cwd():
             # in case we are continuing from a previous step, we need to determine ligand residues again
             if self.ligand != None:
@@ -725,7 +735,7 @@ class MEMENTO:
                 self.ligand_residues = set([a.resid for a in ligand_universe.atoms])
             else:
                 self.ligand_residues = []
-            
+
             local_path = "boxes/"
 
             for n in range(self.number_of_intermediates):

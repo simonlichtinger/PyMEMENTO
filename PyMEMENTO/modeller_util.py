@@ -4,15 +4,21 @@ from shutil import move
 import os
 
 # Modeller imports needs to lie in functions, because otherwise the docs can't build without a modeller license.
-#from modeller import Environ, Alignment, Model
-#from modeller.automodel import AutoModel
+# from modeller import Environ, Alignment, Model
+# from modeller.automodel import AutoModel
 
 
 from glob import glob
 from os.path import join
 
 
-def create_ali_file(pdb_file: str, out_path: str, include_residues: list, ali_file_name: str = "morph->protein.ali", use_all_chains = False):
+def create_ali_file(
+    pdb_file: str,
+    out_path: str,
+    include_residues: list,
+    ali_file_name: str = "morph->protein.ali",
+    use_all_chains=False,
+):
     """Create the *.ali file which is necessary for modelling. In this case,
     the only differnce between knowns and sequence is removing the caps.
 
@@ -54,7 +60,9 @@ def create_ali_file(pdb_file: str, out_path: str, include_residues: list, ali_fi
     aln.write(file=join(out_path, ali_file_name), alignment_format="PIR")
 
 
-def run_modeller(path: str, number_of_models: int, ali_file_name: str = "morph->protein.ali"):
+def run_modeller(
+    path: str, number_of_models: int, ali_file_name: str = "morph->protein.ali"
+):
     """Run modeller on the ali file contained in a specified directory.
 
     :param path: Directory in which to run modeller.

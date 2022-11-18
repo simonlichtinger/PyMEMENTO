@@ -47,7 +47,7 @@ def pdb2gmx(
     asp=False,
     asp_protonation_states=[],
     cap_type="AMBER",
-    multi_chain=False
+    multi_chain=False,
 ):
     """Run gmx pdb2gmx on a given pdb file.
 
@@ -378,10 +378,12 @@ def generate_membrane_index(file_to_process: str, folder_path: str):
     )
 
 
-def stretch_relative(to_strech: mda.Universe, anchor: mda.Universe, scale_factor: float):
+def stretch_relative(
+    to_strech: mda.Universe, anchor: mda.Universe, scale_factor: float
+):
     """Act on a Universe or AtomGroup to stretch it relative to the center of geometry of another Universe,
     in the x-y plane.
-    
+
     :param to_strech: Universe or AtomGroup to stretch.
     :type to_strech: MDAnalysis.Universe or MDAnalysis.AtomGroup
     :param anchor: Universe or AtomGroup to use as the center of geometry.
@@ -399,21 +401,22 @@ def stretch_relative(to_strech: mda.Universe, anchor: mda.Universe, scale_factor
 
 def stretch_boxsize(boxsize_line: str, scale_factor: float):
     """Scale box-size string in gro formatting by a scale_factor.
-    
+
     :param boxsize_line: Box-size line in gro file format.
     :type boxsize_line: str
     :param scale_factor: Scale factor to apply to box-size.
     :type scale_factor: float"""
     scale = [scale_factor, scale_factor, 1]  # only in x-y plane!
     dimenions = [
-        round(float(x) * scale[n], 5) if n < 3 else round(float(x), 5) for n, x in enumerate(boxsize_line.split())
+        round(float(x) * scale[n], 5) if n < 3 else round(float(x), 5)
+        for n, x in enumerate(boxsize_line.split())
     ]
     return "".join([str(x).rjust(10) for x in dimenions]) + "\n"
 
 
 def change_boxsize(file_to_process: str, boxsize_line: str):
     """Change the dimensions of a file to values specified by a gro-formatted string.
-    
+
     :param file_to_process: Path to the coordinate file to process.
     :type file_to_process: str
     :param boxsize_line: box size in format of last line of gro file
@@ -424,10 +427,17 @@ def change_boxsize(file_to_process: str, boxsize_line: str):
     # Deal with hexagonal boxes, which will have additional box vectors in columns 4 to 6
     if len(dimensions) == 3:
         dimensions_out = dimensions + [90, 90, 90]
-    elif dimensions[3] == 0 and dimensions[4] == 0 and dimensions[5] > 59 and dimensions[5] <61:
-        dimensions_out = dimensions[:3] + [90,90,60]
+    elif (
+        dimensions[3] == 0
+        and dimensions[4] == 0
+        and dimensions[5] > 59
+        and dimensions[5] < 61
+    ):
+        dimensions_out = dimensions[:3] + [90, 90, 60]
     else:
-        raise ValueError(f"The box vectors {boxsize_line} are not of a supported cubic or hexagonal type.")
+        raise ValueError(
+            f"The box vectors {boxsize_line} are not of a supported cubic or hexagonal type."
+        )
 
     u.dimensions = np.array(dimensions_out)
     u.atoms.write(file_to_process)

@@ -14,12 +14,12 @@ def run_one_replicate_of_mc(seed, sampler):
     """Wrapper function in order to call run_monte_carlo from a multiprocessing pool.
     It needs to lie outside the class so that it is picklable and can be handled with the
     standard multiprocessing library.
-    
+
     :param seed: Seed for the random number generator.
     :type seed: int
     :param sampler: The sampler object to run.
     :type sampler: :class:`MCPathSampler`
-    
+
     :return: The pathsampling output as from run_monte_carlo.
     :rtype: tuple"""
     start_time = time.time()
@@ -88,10 +88,10 @@ class MCPathSampler:
     def path_energy_function(self, path):
         """Computes the sum of squares of the RMSD between neighbours in a given path. Serves
         as the energy function in the MC sampling.
-        
+
         :param path: Path of :class:`MDAnalysis.Universe` objects.
         :type path: list
-        
+
         :return: Sum of squares of RMSD between neighbours, acting as energy function.
         :rtype: float"""
         energy = 0
@@ -140,7 +140,7 @@ class MCPathSampler:
     ):
         """This is a simple MC run procedure for our system. Returns the minimum energy configuration as
         a tuple (min_configuration,  min_energy).
-        
+
         :param name: Name of the folder in which to store the results.
         :type name: str
         :param number_of_steps: How many MC steps to perform.
@@ -153,10 +153,9 @@ class MCPathSampler:
         :type verbose: bool, optional
         :param seed: Seed for the random number generator. If None, gets randomly assigned from python random generator. Defaults to None.
         :type seed: int, optional
-        
+
         :return: Minimum energy configuration (path as list of Universes) and its energy.
         :rtype: tuple"""
-
 
         # prepare folder
         local_path = self.FOLDER + name
@@ -199,7 +198,7 @@ class MCPathSampler:
         print("Done MC run. Dumping trajectory and energies.")
         plt.plot(energy_progression)
         plt.savefig(local_path + "trajectory.pdf")
-        plt.clf() # was plt.close()
+        plt.clf()  # was plt.close()
         plt.close()
 
         # Write full trajectory and energies to file
