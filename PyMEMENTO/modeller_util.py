@@ -2,8 +2,12 @@
 
 from shutil import move
 import os
-from modeller import Environ, Alignment, Model
-from modeller.automodel import AutoModel
+
+# Modeller imports needs to lie in functions, because otherwise the docs can't build without a modeller license.
+#from modeller import Environ, Alignment, Model
+#from modeller.automodel import AutoModel
+
+
 from glob import glob
 from os.path import join
 
@@ -24,6 +28,9 @@ def create_ali_file(pdb_file: str, out_path: str, include_residues: list, ali_fi
         for a protein which didn't have any chain identifiers) is used. If True, use all residues that were present in the original coordinate file. Defaults to False.
     :type ali_file_name: bool, optional
     """
+
+    from modeller import Environ, Alignment, Model
+    from modeller.automodel import AutoModel
 
     env = Environ()
     aln = Alignment(env)
@@ -57,6 +64,9 @@ def run_modeller(path: str, number_of_models: int, ali_file_name: str = "morph->
     :param ali_file_name: Name of the ali file to be used, defaults to "morph->protein.ali"
     :type ali_file_name: str, optional
     """
+
+    from modeller import Environ, Alignment, Model
+    from modeller.automodel import AutoModel
 
     # Remember current working directory, workaround to get modeller files in correct place
     working_dir = os.getcwd()
