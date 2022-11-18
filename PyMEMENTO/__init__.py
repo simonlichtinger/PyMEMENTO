@@ -1,15 +1,16 @@
 """PyMEMENTO"""
 
+import warnings
+
 # Check whether Modeller is installed, if not, throw error and abort
 try:
     import modeller
 except:
-    print(
+    warnings.warn(
         "Dependency problem: Modeller not found and needs to be installed separately.\
      Try 'conda install Modeller' or follow the Modeller installation instructions here:\
         https://salilab.org/modeller/download_installation.html "
     )
-    quit()
 
 # Check whether gromacs is found
 import gromacs
@@ -17,12 +18,11 @@ import gromacs
 try:
     gromacs.release()
 except:
-    print(
+    warnings.warn(
         "Dependency problem: Gromacs not found and needs to be installed separately.\
         Follow the Gromacs installation instructions here:\
         https://manual.gromacs.org/current/install-guide/index.html"
     )
-    quit()
 
 # Add imports here
 from .pymemento import MEMENTO
