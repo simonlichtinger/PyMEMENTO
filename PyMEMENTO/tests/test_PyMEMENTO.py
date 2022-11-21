@@ -41,12 +41,13 @@ def test_workflow_nolipids(tmpdir):
             "testrun/",
             join(DATA_PATH, "decaalanine/helix.gro"),
             join(DATA_PATH, "decaalanine/extended.gro"),
+            list(range(1, 11))
         )
         # Perform morphing and modelling
         model.morph(3)
         model.make_models(2, include_residues=list(range(1, 11)))
         model.find_best_path()
-        model.process_models(list(range(1, 11)))
+        model.process_models()
         model.prepare_boxes()
         model.solvate_boxes(ion_concentration=0.15)
 
@@ -106,13 +107,14 @@ def test_simplistic_ligand(tmpdir):
             "testrun/",
             join(DATA_PATH, "decaalanine/helix_with_ligand.gro"),
             join(DATA_PATH, "decaalanine/extended_with_ligand.gro"),
-            ligand="resname LIG",
+            list(range(1, 11)),
+            ligand="resname LIG"
         )
         # Perform morphing and modelling
         model.morph(3)
         model.make_models(2, include_residues=list(range(1, 11)))
         model.find_best_path()
-        model.process_models(list(range(1, 11)))
+        model.process_models()
         model.prepare_boxes(
             template_folder=join(DATA_PATH, "template_decaalanine_with_ligand")
         )
@@ -132,13 +134,14 @@ def test_simplistic_ligand_peptide(tmpdir):
             "testrun/",
             join(DATA_PATH, "decaalanine/helix_with_ligand_peptide.gro"),
             join(DATA_PATH, "decaalanine/extended_with_ligand_peptide.gro"),
+            list(range(1, 11)),
             ligand="resid 12:13",
         )
         # Perform morphing and modelling
         model.morph(3)
         model.make_models(2, include_residues=list(range(1, 11)))
         model.find_best_path()
-        model.process_models(list(range(1, 11)))
+        model.process_models()
         model.prepare_boxes(
             template_folder=join(DATA_PATH, "template_decaalanine_with_ligand_peptide")
         )
@@ -162,13 +165,14 @@ def test_setup_CHARMM(tmpdir):
             "testrun/",
             join(DATA_PATH, "decaalanine/helix.gro"),
             join(DATA_PATH, "decaalanine/extended.gro"),
+            list(range(1, 11)), 
             forcefield="CHARMM36",
         )
         # Perform morphing and modelling
         model.morph(3)
         model.make_models(2, include_residues=list(range(1, 11)))
         model.find_best_path()
-        model.process_models(list(range(1, 11)), cap_type="CHARMM")
+        model.process_models(cap_type="CHARMM")
         model.prepare_boxes()
         model.solvate_boxes(ion_concentration=0.15)
 
@@ -186,13 +190,13 @@ def test_setup_protonation_states(tmpdir):
             "testrun/",
             join(DATA_PATH, "protonation_states_decaalanine/helix.gro"),
             join(DATA_PATH, "protonation_states_decaalanine/extended.gro"),
+            list(range(1, 11)),
         )
         # Perform morphing and modelling
         model.morph(3)
         model.make_models(2, include_residues=list(range(1, 11)))
         model.find_best_path()
-        model.process_models(
-            list(range(1, 11)),
+        model.process_models( 
             his=True,
             his_protonation_states=(1, 2),
             glu=True,
@@ -225,6 +229,7 @@ def test_setup_protonation_states_CHARMM(tmpdir):
             "testrun/",
             join(DATA_PATH, "protonation_states_decaalanine/helix.gro"),
             join(DATA_PATH, "protonation_states_decaalanine/extended.gro"),
+            list(range(1, 11)),
             forcefield="CHARMM36",
         )
         # Perform morphing and modelling
@@ -232,7 +237,6 @@ def test_setup_protonation_states_CHARMM(tmpdir):
         model.make_models(2, include_residues=list(range(1, 11)))
         model.find_best_path()
         model.process_models(
-            list(range(1, 11)),
             his=True,
             his_protonation_states=(1, 2),
             glu=True,
@@ -267,6 +271,7 @@ def test_lipid_setup(tmpdir):
             "testrun/",
             join(DATA_PATH, "LEUT/occ.gro"),
             join(DATA_PATH, "LEUT/if.gro"),
+            list(range(11, 508)),
             forcefield="CHARMM36",
             lipid="resname POPE",
         )
@@ -275,7 +280,6 @@ def test_lipid_setup(tmpdir):
         model.make_models(2, include_residues=list(range(1, 498)))
         model.find_best_path(poolsize=1, mc_replicates=1)
         model.process_models(
-            list(range(11, 508)),
             caps=True,
             cap_type="CHARMM",
             his=True,

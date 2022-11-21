@@ -41,6 +41,7 @@ class MEMENTO:
         working_dir: str,
         start_file: str,
         target_file: str,
+        residue_numbers: list,
         forcefield="AMBER14",
         forcefield_paths=None,
         lipid=None,
@@ -58,6 +59,9 @@ class MEMENTO:
         :type start_file: str
         :param end_file: Path to the file containing the morphing target structure.
         :type end_file: str
+        :param residue_numbers:  A list of residue numbers which the protein residues should have after processing\
+            (use this to take care of starting points other than 1, for example, and multichain overlapping residue numbers).
+        :type residue_numbers: list
         :param forcefield: Which forcefield to use. 'AMBER14' will default to integrated amber14.sb, 'CHARMM36' to integrated charmm36-jul2021, 'AMBER_SLIPIDS' to integrated amber14.sb + slipids.
         'Other' will read the forcefield_paths keyword argument. Defaults to 'AMBER14'.
         :param forcefield_paths: Provice paths to a number of forcefield folders needed for running simulations, if not 'AMBER14' or 'CHARMM36', defaults to None.
@@ -87,6 +91,9 @@ class MEMENTO:
         self.ligand = ligand
         self.ligand_type = ligand_type
         self.lipid = lipid
+
+        # Save the residue numbers which will be needed later.
+        self.residue_numbers = residue_numbers
 
         # Assign forcefield folder
         if forcefield == "AMBER14":
@@ -372,7 +379,6 @@ class MEMENTO:
 
     def process_models(
         self,
-        residue_numbers: list,
         caps=True,
         cap_type="AMBER",
         proline_n_term=False,
@@ -387,9 +393,6 @@ class MEMENTO:
         fixing residue numbers, aligning with starting structure, capping termini (optional) and adding H atoms
         via the use of 'gmx pdb2gmx'.
 
-        :param residue_numbers: A list of residue numbers which the protein residues should have after processing\
-            (use this to take care of starting points other than 1, for example).
-        :type residue_numbers: list
         :param caps: Whether or not to add ACE and NME caps, defaults to True
         :type caps: bool, optional
         :param cap_type: Caps can be of the 'AMBER' or 'CHARMM' forcefield types, defaults to 'AMBER'
@@ -456,7 +459,7 @@ class MEMENTO:
                 fix_residue_numbers(
                     frame_path,
                     frame_path,
-                    residue_numbers,
+                    self.residue_numbers,
                 )
 
             file_root = "frame"
@@ -475,20 +478,20 @@ class MEMENTO:
                         join(local_path, file_root + f"{n}.pdb"),
                         join(local_path, file_root + f"capped{n}.pdb"),
                         ref_file,
-                        residue_numbers[0],
-                        residue_numbers[-1],
+                        self.residue_numbers[0],
+                        self.residue_numbers[-1],
                     )
 
                     # Rename the cap residues to fit the protein naming convention
                     sed(
                         join(local_path, file_root + f"capped{n}.pdb"),
                         "ACE X   1",
-                        "ACE A" + str(residue_numbers[0] - 1).rjust(4, " "),
+                        "ACE A" + str(self.residue_numbers[0] - 1).rjust(4, " "),
                     )
                     sed(
                         join(local_path, file_root + f"capped{n}.pdb"),
                         "NME X   4",
-                        "NME A" + str(residue_numbers[-1] + 1).rjust(4, " "),
+                        "NME A" + str(self.residue_numbers[-1] + 1).rjust(4, " "),
                     )
                 file_root = "framecapped"
 
@@ -750,7 +753,9 @@ class MEMENTO:
                     join(local_path, f"sim{n}/solvated.gro"),
                     join(local_path, f"sim{n}/"),
                     "C-alpha",
+                    multiple_chains=self.multiple_chains,
                     exclude_res=self.ligand_residues,
+                    residue_numbers=self.residue_numbers,
                 )
                 # For lipids, we also need to generate index files, as we'll be using two temperature coupling groups
                 if self.lipid:

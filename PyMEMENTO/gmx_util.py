@@ -12,6 +12,7 @@ from .pdb_util import sed
 import gromacs
 import gromacs.cbook
 from os.path import join
+import MDAnalysis as mda
 
 
 def crop_top_to_itp(file: str):
@@ -320,7 +321,7 @@ def minimize(
 
 
 def generate_posre(
-    file_to_process: str, folder_path: str, group: str, exclude_res: list = []
+    file_to_process: str, folder_path: str, group: str, exclude_res: list = [], multiple_chains: list = None, residue_numbers: list = None
 ):
     """Generate a position restraint posre.itp file.
 
@@ -332,32 +333,80 @@ def generate_posre(
     :type group: str
     :param exclude_res: List of residues to exclude from making restraints
     :type exclude_res: list<int>, optional
+    :param multiple_chains: In case of a multichain protein, list of chain ID letters for each residue of the complete protein. Defaults to None.
+    :type multiple_chains: list<str>, optional
+    :param residue_numbers: In case of a multichain protein, list of residue numbers for the complete protein. Defaults to None.
+    :type residue_numbers: list<int>, optional
     """
+
+    if multiple_chains and residue_numbers==None:
+        raise ValueError("Need to provided residue numbers for multichain proteins.")
 
     current_index_list = parse_indexkey_to_list(file_to_process)
     group_index = current_index_list.index(group)
 
-    if len(exclude_res) > 0:
-        exclude_string = " | ".join([f"r {res}" for res in exclude_res])
-
-        gromacs.make_ndx(
-            f=file_to_process,
-            o=join(folder_path, "temp.ndx"),
-            input=[exclude_string, f"!{len(current_index_list)} & {group_index}", "q"],
-        )
-        gromacs.genrestr(
-            f=file_to_process,
-            o=join(folder_path, "posre.itp"),
-            n=join(folder_path, "temp.ndx"),
-            input=[str(len(current_index_list) + 1)],
-        )
-        os.remove(join(folder_path, "temp.ndx"))
+    # for single-chain proteins, just take all protein atoms into account for posre generation.
+    if multiple_chains == None:
+        if len(exclude_res) > 0:
+            exclude_string = " | ".join([f"r {res}" for res in exclude_res])
+            
+            gromacs.make_ndx(
+                f=file_to_process,
+                o=join(folder_path, "temp.ndx"),
+                input=[exclude_string, f"!{len(current_index_list)} & {group_index}", "q"],
+            )
+            gromacs.genrestr(
+                f=file_to_process,
+                o=join(folder_path, "posre.itp"),
+                n=join(folder_path, "temp.ndx"),
+                input=[str(len(current_index_list) + 1)],
+            )
+            os.remove(join(folder_path, "temp.ndx"))
+        else:
+            gromacs.genrestr(
+                f=file_to_process,
+                o=join(folder_path, "posre.itp"),
+                input=[str(group_index)],
+            )
     else:
-        gromacs.genrestr(
-            f=file_to_process,
-            o=join(folder_path, "posre.itp"),
-            input=[str(group_index)],
-        )
+        # for multichain proteins, need to split into individual chains (while reassigning atom indices)
+        for chainID in set(multiple_chains):
+            # Make a selection string for the residues of a particular chain ID
+            include_chainres = []
+            for n,res_num in enumerate(residue_numbers):
+                if multiple_chains[n] == chainID:
+                    include_chainres.append(res_num)
+            include_res_string =  " | ".join([f"r {res}" for res in include_chainres])
+
+            # Output a temporary coordinate file that only includes one chain
+
+            if len(exclude_res) > 0:
+                string_mda_sele = "protein and not ("+ " or ".join([f"resnum {res}" for res in exclude_res] + ")")
+            else:
+                string_mda_sele = "protein"
+
+            temp_chain_file = join(folder_path, "temp.gro")
+
+            universe_to_process = mda.Universe(file_to_process)
+            atomgroups_to_merge = []
+            for n, res in enumerate(universe_to_process.select_atoms(string_mda_sele).residues):
+                if multiple_chains[n] == chainID:
+                    atomgroups_to_merge.append(res.atoms)
+            
+            universe_onechain =  mda.Merge(*atomgroups_to_merge)
+            universe_onechain.atoms.write(temp_chain_file)
+            
+            # Now restrain the desired atoms, updating the group index, in case that changed
+
+            current_index_list = parse_indexkey_to_list(temp_chain_file)
+            group_index = current_index_list.index(group)
+            gromacs.genrestr(
+                f=temp_chain_file,
+                o=join(folder_path, f"posre_chain{chainID}.itp"),
+                input=[str(group_index)],
+            )
+
+            os.remove(temp_chain_file)
 
 
 def generate_membrane_index(file_to_process: str, folder_path: str):
