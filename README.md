@@ -1,9 +1,9 @@
 PyMEMENTO
 ==============================
 [//]: # (Badges)
-[![GitHub Actions Build Status](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/PyMEMENTO/workflows/CI/badge.svg)](https://github.com/simonlichtinger/PyMEMENTO/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/PyMEMENTO/branch/master/graph/badge.svg)](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/PyMEMENTO/branch/master)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![CodeQL](https://github.com/simonlichtinger/PyMEMENTO/actions/workflows/codeql.yml/badge.svg)](https://github.com/simonlichtinger/PyMEMENTO/actions/workflows/codeql.yml)
+[![Docs](https://img.shields.io/badge/pymemento.readthedocs.io-blueviolet)](https://pymemento.readthedocs.io)
 [![Documentation Status](https://readthedocs.org/projects/pymemento/badge/?version=latest)](https://pymemento.readthedocs.io/en/latest/?badge=latest)
 
 PyMEMENTO
