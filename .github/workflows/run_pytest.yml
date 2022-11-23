@@ -2,6 +2,11 @@ name: pytest
 
 on: [push]
 
+defaults:
+  run:
+    # conda setup requires this special shell
+    shell: bash -l {0}
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest
