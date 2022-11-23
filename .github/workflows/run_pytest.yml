@@ -23,8 +23,11 @@ jobs:
     - name: Install dependencies
       run: |
         export KEY_MODELLER=$MODELLER_LICENSE_KEY
+        echo $KEY_MODELLER
         conda install -c salilab modeller
         # This may be slower but saves us from having to build gromacs
+        cat /usr/share/miniconda/lib/modeller-10.4/modlib/modeller/config.py
+        
         conda install -c bioconda gromacs
         
     - name: Install PyMEMENTO
