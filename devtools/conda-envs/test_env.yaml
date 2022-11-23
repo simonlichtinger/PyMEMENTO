@@ -17,6 +17,7 @@ dependencies:
   
   - gromacs=2021.3
   - modeller
+  - plumed
 
     # Pip-only installs
   #- pip:
