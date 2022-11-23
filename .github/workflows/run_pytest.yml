@@ -22,9 +22,9 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
+        export KEY_MODELLER=$MODELLER_LICENSE_KEY
         conda install -c salilab modeller
-        # install the modeller secret
-        sed -i -e "s/XXXX/$MODELLER_LICENSE_KEY/g"  $CONDA/lib/modeller-*/modlib/modeller/config.py
+
         # This may be slower but saves us from having to build gromacs
         conda install -c bioconda gromacs
         
