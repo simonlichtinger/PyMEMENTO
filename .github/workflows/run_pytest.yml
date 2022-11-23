@@ -24,7 +24,7 @@ jobs:
       env:
            LICENSE_KEY: ${{ secrets.MODELLER_LICENSE_KEY }}
       run: |
-        sed -i -e "s/XXXX/${LICENSE_KEY}/g" /usr/share/miniconda/lib/modeller-*/modlib/modeller/config.py
+        sed -i -e "s/XXXX/${LICENSE_KEY}/g" /usr/share/miniconda/envs/test/lib/modeller-*/modlib/modeller/config.py
         
     - name: Install PyMEMENTO
       run: |
