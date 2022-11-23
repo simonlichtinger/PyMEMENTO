@@ -14,14 +14,14 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: 3.9
-    - shell: bash
-      env:
-           LICENSE_KEY: ${{ secrets.MODELLER_LICENSE_KEY }}
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
+      shell: bash
+      env:
+           LICENSE_KEY: ${{ secrets.MODELLER_LICENSE_KEY }}
       run: |
 
         conda install -c salilab modeller
@@ -32,7 +32,7 @@ jobs:
         cat /usr/share/miniconda/lib/modeller-10.4/modlib/modeller/config.py
         
         # This may be slower but saves us from having to build gromacs
-        conda install -c "bioconda/label/cf201901" gromacs=2021.3
+        conda install -c bioconda gromacs=2021.3
         
     - name: Install PyMEMENTO
       run: |
