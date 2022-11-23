@@ -24,7 +24,6 @@ jobs:
       run: |
         export KEY_MODELLER=$MODELLER_LICENSE_KEY
         conda install -c salilab modeller
-
         # This may be slower but saves us from having to build gromacs
         conda install -c bioconda gromacs
         
