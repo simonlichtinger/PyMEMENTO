@@ -8,6 +8,8 @@ __pycache__
 .pytest_cache
 .vscode
 .coverage
+.coverage*
+coverage*
 docs/_build
 testrun
 testing_alpha7
