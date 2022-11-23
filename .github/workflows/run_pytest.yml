@@ -36,4 +36,12 @@ jobs:
         pip install .
     - name: Test with pytest
       run: |
-        pytest
+        pytest -v --benchmark --cov=PyMEMENTO --cov-report=xml --color=yes PyMEMENTO/tests/
+        
+    - name: CodeCov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-PyMEMENTO
+
