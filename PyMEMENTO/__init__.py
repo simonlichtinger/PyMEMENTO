@@ -14,6 +14,10 @@ except:
 
 # Check whether gromacs is found
 import gromacs
+gromacs.config.setup()
+import os
+
+devnull = open(os.devnull, 'w')
 
 try:
     gromacs.release()
@@ -21,8 +25,20 @@ except:
     warnings.warn(
         "Dependency problem: Gromacs not found and needs to be installed separately.\
         Follow the Gromacs installation instructions here:\
-        https://manual.gromacs.org/current/install-guide/index.html"
+        https://manual.gromacs.org/current/install-guide/index.html or \
+             install via 'conda install -c bioconda gromacs'."
     )
+
+
+# Check whether plumed works
+import subprocess
+
+try:
+    assert 0==subprocess.call("plumed", shell=True, stdout=devnull)
+except:
+    warnings.warn("Plumed not found, will not be able to set up umbrella sampling. Install via \
+        the instructions on https://www.plumed.org/doc-v2.8/user-doc/html/index.html \
+             or 'conda install -c conda-forge plumed'")
 
 # Add imports here
 from .pymemento import MEMENTO
