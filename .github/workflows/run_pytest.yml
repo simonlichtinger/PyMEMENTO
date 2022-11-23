@@ -27,10 +27,14 @@ jobs:
         sed -i -e "s/XXXX/${LICENSE_KEY}/g" /usr/share/miniconda/envs/test/lib/modeller-*/modlib/modeller/config.py
         
     - name: Install PyMEMENTO
+      shell: bash
       run: |
+        conda init bash
         conda activate test
         pip install .
     - name: Test with pytest
+      shell: bash
       run: |
+        conda init bash
         conda activate test
         pytest
