@@ -32,6 +32,7 @@ jobs:
         cat /usr/share/miniconda/lib/modeller-10.4/modlib/modeller/config.py
         
         # This may be slower but saves us from having to build gromacs
+        conda install libgcc-ng>=11.2.0
         conda install -c bioconda gromacs=2021.3
         
     - name: Install PyMEMENTO
