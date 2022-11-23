@@ -15,7 +15,7 @@ jobs:
       with:
         python-version: 3.9
       env:
-        SUPER_SECRET: ${{ secrets.MODELLER_LICENSE_KEY }}
+        MODELLER_LICENSE_KEY: ${{ secrets.MODELLER_LICENSE_KEY }}
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
@@ -26,7 +26,7 @@ jobs:
 
         conda install -c salilab modeller
         # This may be slower but saves us from having to build gromacs
-        sed -i -e "s/XXXX/$MODELLER_LICENSE_KEY/g" /usr/share/miniconda/lib/modeller-*/modlib/modeller/config.py
+        # sed -i -e "s/XXXX/$MODELLER_LICENSE_KEY/g" /usr/share/miniconda/lib/modeller-*/modlib/modeller/config.py
         
         # Delete this as soon as not needed!
         cat /usr/share/miniconda/lib/modeller-10.4/modlib/modeller/config.py
