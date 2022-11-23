@@ -24,15 +24,14 @@ jobs:
            LICENSE_KEY: ${{ secrets.MODELLER_LICENSE_KEY }}
       run: |
 
-        conda install -c salilab modeller
+        #conda install -c salilab modeller
         
-        sed -i -e "s/XXXX/${LICENSE_KEY}/g" /usr/share/miniconda/lib/modeller-*/modlib/modeller/config.py
+        #sed -i -e "s/XXXX/${LICENSE_KEY}/g" /usr/share/miniconda/lib/modeller-*/modlib/modeller/config.py
         
         # Delete this as soon as not needed!
-        cat /usr/share/miniconda/lib/modeller-10.4/modlib/modeller/config.py
+        # cat /usr/share/miniconda/lib/modeller-10.4/modlib/modeller/config.py
         
         # This may be slower but saves us from having to build gromacs
-        conda install libgcc-ng>=11.2.0
         conda install -c bioconda gromacs=2021.3
         
     - name: Install PyMEMENTO
