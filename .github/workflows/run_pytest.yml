@@ -13,7 +13,7 @@ jobs:
     - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: 3.9
-        environment-file: devtools/conda-envs/test-env.yaml
+        environment-file: devtools/conda-envs/test_env.yaml
         channels: conda-forge,defaults
         activate-environment: test
         auto-update-conda: true
