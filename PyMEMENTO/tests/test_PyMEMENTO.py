@@ -27,7 +27,7 @@ TESTING_MDRUN_FLAGS = {}
 
 # Switch to these paths and change with tmpdir.as_cwd(): for with tmp2dir.as_cwd(): in order to
 # run the tests locally instead of a tmp folder, for diagnostic purposes.
-#    tmpdir = py.path.local("debuggin_run/")
+#    tmpdir = py.path.local("debugging_run/")
 #    tmpdir.mkdir()
 
 
@@ -259,6 +259,27 @@ def test_setup_protonation_states_CHARMM(tmpdir):
         lengths = [len(glu1), len(glu2), len(his1), len(his2), len(asp1), len(asp2)]
         assert lengths == [15, 16, 17, 18, 12, 13]
 
+def test_multichain(tmpdir):
+    """ Test whether a simplistic multichain model is handled correctly. """
+    with tmpdir.as_cwd():
+        model = MEMENTO(
+            "testrun/",
+            join(DATA_PATH, "multichain/multi.gro"),
+            join(DATA_PATH, "multichain/multi.gro"),
+            [1,2,1,2],
+            multiple_chains=["A","A","B","B"]
+        )
+        # Perform morphing and modelling
+        model.morph(3)
+        model.make_models(2, include_residues=list(range(1, 11)))
+        model.find_best_path()
+        model.process_models(caps=False)
+        model.prepare_boxes(template_folder=join(DATA_PATH, "template_multichain"))
+        model.solvate_boxes(ion_concentration=0.15)
+
+        model.minimize_boxes(TESTING_MDRUN_FLAGS)
+
+        assert os.path.exists("testrun/boxes/sim1/em.gro")
 
 @pytest.mark.slow
 def test_lipid_setup(tmpdir):

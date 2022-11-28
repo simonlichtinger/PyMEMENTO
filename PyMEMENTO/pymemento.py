@@ -393,7 +393,7 @@ class MEMENTO:
         fixing residue numbers, aligning with starting structure, capping termini (optional) and adding H atoms
         via the use of 'gmx pdb2gmx'.
 
-        :param caps: Whether or not to add ACE and NME caps, defaults to True
+        :param caps: Whether or not to add ACE and NME caps, defaults to True. Currently not supported with multichain proteins.
         :type caps: bool, optional
         :param cap_type: Caps can be of the 'AMBER' or 'CHARMM' forcefield types, defaults to 'AMBER'
         :type caps_type: str, optional
@@ -413,6 +413,11 @@ class MEMENTO:
         :param asp_protonation_states: Those asp protonation states which should be chosen (as integers prompted by pdb2gmx), defaults to []
         :type asp_protonation_states: list, optional
         """
+
+        # Currently multichain is not supported with caps
+
+        if caps and self.multiple_chains:
+            raise RuntimeError("Currently, combining caps and multichain proteins isn't supported.")
 
         if not self.pathfinding_done:
             raise RuntimeError(
