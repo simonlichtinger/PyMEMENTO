@@ -747,12 +747,12 @@ class MEMENTO:
             local_path = "boxes/"
 
             for n in range(self.number_of_intermediates):
-                #minimize(
-                #    join(local_path, f"sim{n}/solvated.gro"),
-                #    join(local_path, f"sim{n}/"),
-                #    mdrun_flags=mdrun_flags,
-                #    grompp_flags=grompp_flags,
-                #)
+                minimize(
+                    join(local_path, f"sim{n}/solvated.gro"),
+                    join(local_path, f"sim{n}/"),
+                    mdrun_flags=mdrun_flags,
+                    grompp_flags=grompp_flags,
+                )
                 # Also generate backbone posre.itp files as we'll need them for equilibration
                 generate_posre(
                     join(local_path, f"sim{n}/solvated.gro"),
