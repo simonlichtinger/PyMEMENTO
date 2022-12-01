@@ -402,7 +402,7 @@ def generate_posre(
             group_index = current_index_list.index(group)
             gromacs.genrestr(
                 f=temp_chain_file,
-                o=join(folder_path, f"posre_chain{chainID}.itp"),
+                o=join(folder_path, f"posre_Protein_chain_{chainID}.itp"),
                 input=[str(group_index)],
             )
 

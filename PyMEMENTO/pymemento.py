@@ -78,7 +78,7 @@ class MEMENTO:
             eg ["A","A","A","B","B","B","C","C","C"] for a trimer which has residue numbers 1-3 in chain A, 4-6 in chain B and 7-9 in chain C, defaults to None
         :type multiple_chains: list<str>, optional
         :param last_step_performed: If a previous run has already done some of the steps in the appropriate folder strucutre, pass the last step that was done\
-            with this keyword argument to override order consistency checking. Can be 'modelling', 'pathfinding', 'processing' or 'boxpreparation'. Defaults to ''
+            with this keyword argument to override order consistency checking. Can be 'modelling', 'pathfinding', 'processing', 'boxpreparation' or 'solvation'. Defaults to ''
         :type last_step_performed: str, optional
         """
         self.PLUMED_PATH = PLUMED_PATH
@@ -747,12 +747,12 @@ class MEMENTO:
             local_path = "boxes/"
 
             for n in range(self.number_of_intermediates):
-                minimize(
-                    join(local_path, f"sim{n}/solvated.gro"),
-                    join(local_path, f"sim{n}/"),
-                    mdrun_flags=mdrun_flags,
-                    grompp_flags=grompp_flags,
-                )
+                #minimize(
+                #    join(local_path, f"sim{n}/solvated.gro"),
+                #    join(local_path, f"sim{n}/"),
+                #    mdrun_flags=mdrun_flags,
+                #    grompp_flags=grompp_flags,
+                #)
                 # Also generate backbone posre.itp files as we'll need them for equilibration
                 generate_posre(
                     join(local_path, f"sim{n}/solvated.gro"),
