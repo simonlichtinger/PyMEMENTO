@@ -8,7 +8,7 @@ try:
 except:
     warnings.warn(
         "Dependency problem: Modeller not found and needs to be installed separately.\
-     Try 'conda install Modeller' or follow the Modeller installation instructions here:\
+     Try 'conda install -c salilab modeller' or follow the Modeller installation instructions here:\
         https://salilab.org/modeller/download_installation.html "
     )
 

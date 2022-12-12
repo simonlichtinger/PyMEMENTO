@@ -62,8 +62,9 @@ class MEMENTO:
         :param residue_numbers:  A list of residue numbers which the protein residues should have after processing\
             (use this to take care of starting points other than 1, for example, and multichain overlapping residue numbers).
         :type residue_numbers: list
-        :param forcefield: Which forcefield to use. 'AMBER14' will default to integrated amber14.sb, 'CHARMM36' to integrated charmm36-jul2021, 'AMBER_SLIPIDS' to integrated amber14.sb + slipids.
+        :param forcefield: Which forcefield to use. 'AMBER14' will default to integrated amber14.sb, 'CHARMM36' to integrated charmm36-jul2021, 'AMBER_SLIPIDS' to integrated amber14.sb + slipids. \
         'Other' will read the forcefield_paths keyword argument. Defaults to 'AMBER14'.
+        :type forcefield: str, optional
         :param forcefield_paths: Provice paths to a number of forcefield folders needed for running simulations, if not 'AMBER14' or 'CHARMM36', defaults to None.
         :type forcefield_paths: list, optional
         :param lipid: Specify the lipid selection group to be employed, None means no lipid, defaults to None
@@ -75,7 +76,7 @@ class MEMENTO:
         :param PLUMED_PATH: Path to the plumed executable, defaults to 'plumed'
         :type PLUMED_PATH: str, optional
         :param multiple_chains: If the protein contains multiple chains, pass a list of lists of chain identifiers, \
-            eg ["A","A","A","B","B","B","C","C","C"] for a trimer which has residue numbers 1-3 in chain A, 4-6 in chain B and 7-9 in chain C, defaults to None
+            eg ["A", "A", "A", "B", "B", "B", "C", "C", "C"] for a trimer which has residue numbers 1-3 in chain A, 4-6 in chain B and 7-9 in chain C, defaults to None
         :type multiple_chains: list<str>, optional
         :param last_step_performed: If a previous run has already done some of the steps in the appropriate folder strucutre, pass the last step that was done\
             with this keyword argument to override order consistency checking. Can be 'modelling', 'pathfinding', 'processing', 'boxpreparation' or 'solvation'. Defaults to ''
@@ -798,6 +799,17 @@ class MEMENTO:
         :param folder_name: Name of the umbrella sampling folder to be created, defaults to "umbrella/"
         :type folder_name: str, optional
         """
+
+        # make absolute paths out of plumed files
+
+        plumed_monitor_file = os.path.abspath(plumed_monitor_file)
+        plumed_umbrella_file = os.path.abspath(plumed_umbrella_file)
+
+        # make absolute paths out of run_scripts and extra_plumed_files
+
+        run_scripts = [os.path.abspath(script) for script in run_scripts]
+        extra_plumed_files = [os.path.abspath(script) for script in extra_plumed_files]
+
         with py.path.local(self.working_dir).as_cwd():
             local_path = folder_name
             os.makedirs(local_path, exist_ok=True)

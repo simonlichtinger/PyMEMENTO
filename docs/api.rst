@@ -1,9 +1,12 @@
-API Documentation
-=================
+Python API Documentation
+========================
 
 
 .. autoclass:: PyMEMENTO.MEMENTO
    :members:
+   :special-members: __init__
+   
+   
 
 
 Auxiliary functions
