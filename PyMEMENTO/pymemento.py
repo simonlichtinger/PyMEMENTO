@@ -418,7 +418,9 @@ class MEMENTO:
         # Currently multichain is not supported with caps
 
         if caps and self.multiple_chains:
-            raise RuntimeError("Currently, combining caps and multichain proteins isn't supported.")
+            raise RuntimeError(
+                "Currently, combining caps and multichain proteins isn't supported."
+            )
 
         if not self.pathfinding_done:
             raise RuntimeError(

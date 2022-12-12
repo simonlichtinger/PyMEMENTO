@@ -41,7 +41,7 @@ def test_workflow_nolipids(tmpdir):
             "testrun/",
             join(DATA_PATH, "decaalanine/helix.gro"),
             join(DATA_PATH, "decaalanine/extended.gro"),
-            list(range(1, 11))
+            list(range(1, 11)),
         )
         # Perform morphing and modelling
         model.morph(3)
@@ -108,7 +108,7 @@ def test_simplistic_ligand(tmpdir):
             join(DATA_PATH, "decaalanine/helix_with_ligand.gro"),
             join(DATA_PATH, "decaalanine/extended_with_ligand.gro"),
             list(range(1, 11)),
-            ligand="resname LIG"
+            ligand="resname LIG",
         )
         # Perform morphing and modelling
         model.morph(3)
@@ -165,7 +165,7 @@ def test_setup_CHARMM(tmpdir):
             "testrun/",
             join(DATA_PATH, "decaalanine/helix.gro"),
             join(DATA_PATH, "decaalanine/extended.gro"),
-            list(range(1, 11)), 
+            list(range(1, 11)),
             forcefield="CHARMM36",
         )
         # Perform morphing and modelling
@@ -196,7 +196,7 @@ def test_setup_protonation_states(tmpdir):
         model.morph(3)
         model.make_models(2, include_residues=list(range(1, 11)))
         model.find_best_path()
-        model.process_models( 
+        model.process_models(
             his=True,
             his_protonation_states=(1, 2),
             glu=True,
@@ -259,15 +259,16 @@ def test_setup_protonation_states_CHARMM(tmpdir):
         lengths = [len(glu1), len(glu2), len(his1), len(his2), len(asp1), len(asp2)]
         assert lengths == [15, 16, 17, 18, 12, 13]
 
+
 def test_multichain(tmpdir):
-    """ Test whether a simplistic multichain model is handled correctly. """
+    """Test whether a simplistic multichain model is handled correctly."""
     with tmpdir.as_cwd():
         model = MEMENTO(
             "testrun/",
             join(DATA_PATH, "multichain/multi.gro"),
             join(DATA_PATH, "multichain/multi.gro"),
-            [1,2,1,2],
-            multiple_chains=["A","A","B","B"]
+            [1, 2, 1, 2],
+            multiple_chains=["A", "A", "B", "B"],
         )
         # Perform morphing and modelling
         model.morph(3)
@@ -280,6 +281,7 @@ def test_multichain(tmpdir):
         model.minimize_boxes(TESTING_MDRUN_FLAGS)
 
         assert os.path.exists("testrun/boxes/sim1/em.gro")
+
 
 @pytest.mark.slow
 def test_lipid_setup(tmpdir):

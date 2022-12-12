@@ -14,10 +14,11 @@ except:
 
 # Check whether gromacs is found
 import gromacs
+
 gromacs.config.setup()
 import os
 
-devnull = open(os.devnull, 'w')
+devnull = open(os.devnull, "w")
 
 try:
     gromacs.release()
@@ -34,11 +35,13 @@ except:
 import subprocess
 
 try:
-    assert 0==subprocess.call("plumed", shell=True, stdout=devnull)
+    assert 0 == subprocess.call("plumed", shell=True, stdout=devnull)
 except:
-    warnings.warn("Plumed not found, will not be able to set up umbrella sampling. Install via \
+    warnings.warn(
+        "Plumed not found, will not be able to set up umbrella sampling. Install via \
         the instructions on https://www.plumed.org/doc-v2.8/user-doc/html/index.html \
-             or 'conda install -c conda-forge plumed'")
+             or 'conda install -c conda-forge plumed'"
+    )
 
 # Add imports here
 from .pymemento import MEMENTO

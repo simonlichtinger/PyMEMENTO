@@ -321,7 +321,12 @@ def minimize(
 
 
 def generate_posre(
-    file_to_process: str, folder_path: str, group: str, exclude_res: list = [], multiple_chains: list = None, residue_numbers: list = None
+    file_to_process: str,
+    folder_path: str,
+    group: str,
+    exclude_res: list = [],
+    multiple_chains: list = None,
+    residue_numbers: list = None,
 ):
     """Generate a position restraint posre.itp file.
 
@@ -339,7 +344,7 @@ def generate_posre(
     :type residue_numbers: list<int>, optional
     """
 
-    if multiple_chains and residue_numbers==None:
+    if multiple_chains and residue_numbers == None:
         raise ValueError("Need to provided residue numbers for multichain proteins.")
 
     current_index_list = parse_indexkey_to_list(file_to_process)
@@ -349,11 +354,15 @@ def generate_posre(
     if multiple_chains == None:
         if len(exclude_res) > 0:
             exclude_string = " | ".join([f"r {res}" for res in exclude_res])
-            
+
             gromacs.make_ndx(
                 f=file_to_process,
                 o=join(folder_path, "temp.ndx"),
-                input=[exclude_string, f"!{len(current_index_list)} & {group_index}", "q"],
+                input=[
+                    exclude_string,
+                    f"!{len(current_index_list)} & {group_index}",
+                    "q",
+                ],
             )
             gromacs.genrestr(
                 f=file_to_process,
@@ -373,15 +382,17 @@ def generate_posre(
         for chainID in set(multiple_chains):
             # Make a selection string for the residues of a particular chain ID
             include_chainres = []
-            for n,res_num in enumerate(residue_numbers):
+            for n, res_num in enumerate(residue_numbers):
                 if multiple_chains[n] == chainID:
                     include_chainres.append(res_num)
-            include_res_string =  " | ".join([f"r {res}" for res in include_chainres])
+            include_res_string = " | ".join([f"r {res}" for res in include_chainres])
 
             # Output a temporary coordinate file that only includes one chain
 
             if len(exclude_res) > 0:
-                string_mda_sele = "protein and not ("+ " or ".join([f"resnum {res}" for res in exclude_res] + ")")
+                string_mda_sele = "protein and not (" + " or ".join(
+                    [f"resnum {res}" for res in exclude_res] + ")"
+                )
             else:
                 string_mda_sele = "protein"
 
@@ -389,13 +400,15 @@ def generate_posre(
 
             universe_to_process = mda.Universe(file_to_process)
             atomgroups_to_merge = []
-            for n, res in enumerate(universe_to_process.select_atoms(string_mda_sele).residues):
+            for n, res in enumerate(
+                universe_to_process.select_atoms(string_mda_sele).residues
+            ):
                 if multiple_chains[n] == chainID:
                     atomgroups_to_merge.append(res.atoms)
-            
-            universe_onechain =  mda.Merge(*atomgroups_to_merge)
+
+            universe_onechain = mda.Merge(*atomgroups_to_merge)
             universe_onechain.atoms.write(temp_chain_file)
-            
+
             # Now restrain the desired atoms, updating the group index, in case that changed
 
             current_index_list = parse_indexkey_to_list(temp_chain_file)
