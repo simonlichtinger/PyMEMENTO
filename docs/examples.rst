@@ -49,6 +49,11 @@ Copy these into a location that is convenient for you, and then run the followin
     # Perform an energy minimisation on the MD boxes
     model.minimize_boxes()
 
+
+.. note::  
+    It is a known issue that the pathfinding can crash if too many models have to be loaded by MDAnalysis, which can be limited by the system as MDAnalysis sometimes doesn't close files after loading if the universe is preserved.
+    If you're making a lot of models per intermediate and encounter an OSError, cannot open file, then try running ``` ulimit -n 10000 ``` (or whatever number of models you need) to increase the number of files that can be open at the same time.
+
 The script first initialises a :class:`PyMEMENTO.MEMENTO` instance, which holds some core information: a working path which will later
 contain the created directory tree, an initial coordinate file, a final coordinate file and a list with the residue numbers that should
 be assigned to the protein on completion. Note that every step is saved into the working directory, so MEMENTO can be restarted after
