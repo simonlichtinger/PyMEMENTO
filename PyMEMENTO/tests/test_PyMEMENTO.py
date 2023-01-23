@@ -90,6 +90,42 @@ def test_workflow_nolipids(tmpdir):
         assert os.path.exists("testrun/umbrella_rmsd/metadata.dat")
 
 
+def test_mutagenesis(tmpdir):
+    """Simple test to check that mutageneis works via modeller."""
+
+    with tmpdir.as_cwd():
+        model = MEMENTO(
+            "testrun/",
+            join(DATA_PATH, "decaalanine/helix.gro"),
+            join(DATA_PATH, "decaalanine/extended.gro"),
+            list(range(1, 11)),
+        )
+        # Perform morphing and modelling
+        model.morph(3)
+
+        # Check that passing wrong residues triggers an error
+        with pytest.raises(AssertionError):
+            model.make_models(
+                2, include_residues=list(range(1, 11)), mutagenesis=[(3, "SER", "GLY")]
+            )
+
+        # This is the correct mutation.
+        model.make_models(
+            2, include_residues=list(range(1, 11)), mutagenesis=[(3, "ALA", "GLY")]
+        )
+        model.find_best_path()
+        model.process_models()
+        model.prepare_boxes()
+        model.solvate_boxes(ion_concentration=0.15)
+
+        assert os.path.exists("testrun/boxes/sim1/solvated.gro")
+        # Check that the mutation was made
+        import MDAnalysis as mda
+
+        u = mda.Universe("testrun/boxes/sim1/solvated.gro")
+        assert u.select_atoms("resid 3 and name CA").resnames[0] == "GLY"
+
+
 def test_multiprocessing_coverage():
     """pytest-cov 4.0.0 has a bug where it doesn't do multiprocessing coverage properly.
     It works for 3.0.0, which is now a requirement of this package. This test should hit the line in f(x)

@@ -269,9 +269,16 @@ class MEMENTO:
         # remember what we did
         self.morph_done = True
 
-    def make_models(self, number_of_models: int, include_residues=None, poolsize=12):
+    def make_models(
+        self,
+        number_of_models: int,
+        include_residues=None,
+        poolsize=12,
+        mutagenesis=None,
+    ):
         """Use the modeller package to generate fixed models based on the morphs already
-        present in the folder structure. Caps are removed at this stage.
+        present in the folder structure. Caps are removed at this stage. Mutagenesis can be
+        performed here if desired.
 
         :param number_of_models: How many models to generate.
         :type number_of_models: int
@@ -279,6 +286,8 @@ class MEMENTO:
         :type include_residues: list, optional
         :param poolsize: How many multiprocessing tasks to run, defaults to 12
         :type poolsize: int, optional
+        :param mutagenesis: List of tuples of the form (residue_number, original_residue, new_residue), eg. (10, 'SER', 'ALA') for S10A mutation. \
+        This is not supported for multichain proteins yet. Defaults to None
         """
 
         if not self.morph_done:
@@ -319,6 +328,7 @@ class MEMENTO:
                 join(local_path, "morph0/"),
                 include_residues,
                 use_all_chains=use_all_chains,
+                mutagenesis=mutagenesis,
             )
             for i in range(1, self.number_of_intermediates):
                 shutil.copyfile(

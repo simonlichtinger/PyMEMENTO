@@ -18,24 +18,30 @@ def create_ali_file(
     include_residues: list,
     ali_file_name: str = "morph->protein.ali",
     use_all_chains=False,
+    mutagenesis=None,
 ):
     """Create the *.ali file which is necessary for modelling. In this case,
     the only differnce between knowns and sequence is removing the caps.
+    There is also the option of doing mutagenesis at this step.
 
     :param pdb_file: Path to file with coordinates.
     :type pdb_file: str
     :param out_path: Path into which to write the ali file.
     :type out_path: str
-    :param include_residues: List of all residues which should be included in the model.
+    :param include_residues: List of all residues which should be included in the model. Warning: \
+        This currently works only for continuous ranges of residues!
     :type include_residues: list<int>
     :param ali_file_name: Name of the ali file to be written, defaults to "morph->protein.ali"
     :type ali_file_name: str, optional
     :param use_all_chains: Whether to use all chains of a mutiple-domain protein. If False, only chain 'X' (as written by MDAnalysis\
         for a protein which didn't have any chain identifiers) is used. If True, use all residues that were present in the original coordinate file. Defaults to False.
     :type ali_file_name: bool, optional
+    :param mutagenesis: List of tuples of the form (residue_number, original_residue, new_residue), eg. (10, 'SER', 'ALA') for S10A mutation. \
+        This is not supported for multichain proteins yet. Defaults to None
+    :type mutagenesis: list<tuple<int, str, str>>, optional
     """
 
-    from modeller import Environ, Alignment, Model
+    from modeller import Environ, Alignment, Model, Selection
     from modeller.automodel import AutoModel
 
     env = Environ()
@@ -54,6 +60,20 @@ def create_ali_file(
         mdl = Model(
             env, file=pdb_file, model_segment=(f"{start_count}:X", f"{end_count}:X")
         )
+
+    # If we want to do mutagenesis, we need to do it here in the 'protein' align code
+    if mutagenesis:
+        for mutation in mutagenesis:
+            sel = Selection(mdl.chains["X"].residues[mutation[0] - start_count])
+
+            # consistency check, are we actually mutating the right residue?
+            try:
+                assert len(sel.only_residue_types(mutation[1])) > 0
+            except AssertionError:
+                print(f"Residue {mutation[0]} is not {mutation[1]} as expected.")
+                raise
+
+            sel.mutate(residue_type=mutation[2])
 
     aln.append_model(mdl, align_codes="protein", atom_files=pdb_file)
     aln.align2d()
