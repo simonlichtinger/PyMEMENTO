@@ -25,7 +25,7 @@ def run_one_replicate_of_mc(seed, sampler):
     start_time = time.time()
     print("Replicate is initialised")
     optimum = sampler.run_monte_carlo(
-        f"MC_{multiprocessing.current_process().name}/",
+        f"MC_{multiprocessing.current_process().name}_seed{seed}/",
         sampler.MC_STEPS,
         annealing_progression=[
             sampler.STARTING_TEMPERATURE / (float(n) / 500)
@@ -197,9 +197,10 @@ class MCPathSampler:
 
         print("Done MC run. Dumping trajectory and energies.")
         plt.plot(energy_progression)
+        plt.ylabel("Energy proxy for path RMSD of RMSDs")
+        plt.xlabel("MC step")
         plt.savefig(local_path + "trajectory.pdf")
-        plt.clf()  # was plt.close()
-        plt.close()
+        plt.clf()
 
         # Write full trajectory and energies to file
         np.savetxt(local_path + "mc_energies.dat", energy_progression)
@@ -214,10 +215,10 @@ class MCPathSampler:
 
         return (min_configuration, min_energy)
 
-    def sample_path(self, poolsize=12):
+    def sample_path(self, poolsize=1):
         """Perform the MC sampling using a multiprocessing pool of the desired size.
 
-        :param poolsize: How many multiprocessing instances to use. Setting 1 bypasses multiprocessing, defaults to 12
+        :param poolsize: How many multiprocessing instances to use. Setting 1 bypasses multiprocessing, defaults to 1
         :type poolsize: int, optional
         """
         # Make an run a multiprocessing pool with random seeds.
