@@ -200,7 +200,7 @@ class MCPathSampler:
         plt.ylabel("Energy proxy for path RMSD of RMSDs")
         plt.xlabel("MC step")
         plt.savefig(local_path + "trajectory.pdf")
-        plt.clf()
+        plt.close()
 
         # Write full trajectory and energies to file
         np.savetxt(local_path + "mc_energies.dat", energy_progression)

@@ -2,6 +2,12 @@
 
 import warnings
 
+# Using the pdf backend for matplotlib to avoid plot close freezing when doing memory intensive runs
+# Not sure at this stage whether this is a temporary bug in matplotlib, but it seems to fixthe problem and has no downside
+import matplotlib
+matplotlib.use('pdf')
+
+
 # Check whether Modeller is installed, if not, throw error and abort
 try:
     import modeller
