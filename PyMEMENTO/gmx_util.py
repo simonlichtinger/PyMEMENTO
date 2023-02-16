@@ -492,8 +492,8 @@ def change_boxsize(file_to_process: str, boxsize_line: str):
     elif (
         dimensions[3] == 0
         and dimensions[4] == 0
-        and dimensions[5] > 59
-        and dimensions[5] < 61
+        and dimensions[5] > 50
+        and dimensions[5] < 70
     ):
         dimensions_out = dimensions[:3] + [90, 90, 60]
     else:
