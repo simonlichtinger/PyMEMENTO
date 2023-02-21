@@ -200,8 +200,9 @@ works the same as for deca-alanine above, though ``plumed.dat`` and ``plumed_mon
     ADK contains three histidine residues. By default, these would be assigned by gmx pdb2gmx, however this is almost never a good idea
     because different histidine prototation states between umbrella sampling windows will crash replica exchange (because the atom ordering
     and connectivity are not identical). It is therefore recommended to first run pdb2gmx on one of the end states and use the resulting 
-    histidine protonation states for all intermediates, as was done in this example.
-
+    histidine protonation states for all intermediates, as was done in this example. In order to avoid problems, with pre-assigned histidine
+    protonation states in your input coordinate files (which come with residue names like HISE, depending on the forcefield), it is often safest to 
+    rename all histidines to 'HIS' before passing to PyMEMENTO and reassigning them later.
 
 
 Handling lipids
