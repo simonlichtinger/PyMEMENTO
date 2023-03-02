@@ -31,7 +31,10 @@ Copy these into a location that is convenient for you, and then run the followin
     # Perform coordinate interpolation in 24 windows
     model.morph(24)
 
-    # Make 5 models per intermediate to fix morph, using all residues except for caps
+    # Make 5 models per intermediate to fix morph, using all residues except for caps (give a list of 
+    # residue numbers like in the class initialisation if you do not want the default, which would be 
+    # a continuous range from the minimum to the maximum residue given in the constructor 
+    # --- for deca-alanine, that would have been fine).
     model.make_models(5, include_residues=list(range(1, 11)))
 
     # Find the smoothest path through the space of models
@@ -56,7 +59,7 @@ Copy these into a location that is convenient for you, and then run the followin
 
 The script first initialises a :class:`PyMEMENTO.MEMENTO` instance, which holds some core information: a working path which will later
 contain the created directory tree, an initial coordinate file, a final coordinate file and a list with the residue numbers that should
-be assigned to the protein on completion. Note that every step is saved into the working directory, so MEMENTO can be restarted after
+be assigned to the protein on completion. This is useful if your protein has dis-continuous residue numbering or residue numbers do not start at 1. In the case of deca-alanine, ``list(range(1, 11))`` simply tells PyMEMENTO that we want a list of residue numbers as [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].  Note that every step PyMEMENTO performs is saved into the working directory, so MEMENTO can be restarted after
 only some of the following commands have run, provided that the ``last_step_performed`` keyword argument is passed.
 
 We then perform the steps of the MEMENTO procedure, which are presented as individual methods of the class (here, for simplicity
