@@ -181,7 +181,7 @@ MEMENTO can be found `here <https://github.com/simonlichtinger/PyMEMENTO/tree/ma
             "example_ADK_holo/",
             "holo_closed.gro",
             "holo_open.gro",
-            list(range(1, 215))
+            list(range(1, 215)),
             ligand="resname AP5"
         )
 
