@@ -7,7 +7,6 @@ PyMEMENTO
 [![CodeQL](https://github.com/simonlichtinger/PyMEMENTO/actions/workflows/codeql.yml/badge.svg)](https://github.com/simonlichtinger/PyMEMENTO/actions/workflows/codeql.yml)
 [![Docs](https://img.shields.io/badge/pymemento.readthedocs.io-blueviolet)](https://pymemento.readthedocs.io)
 [![Documentation Status](https://readthedocs.org/projects/pymemento/badge/?version=latest)](https://pymemento.readthedocs.io/en/latest/?badge=latest)
-[![DOI:10.1021/acs.jctc.3c00140]](https://doi.org/10.1021/acs.jctc.3c00140)
 
 PyMEMENTO is a simple python implementation of the MEMENTO method for generating paths between known protein conformations as inputs for umbrella sampling (Morphing Endstates by Modelling Ensembles with iNdependent TOpologies). The method is described in detail in the accompanying [publication](https://pubs.acs.org/doi/full/10.1021/acs.jctc.3c00140). If MEMENTO or this repository have been useful in your work, please cite this paper.
 
