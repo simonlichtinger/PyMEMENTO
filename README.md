@@ -8,7 +8,7 @@ PyMEMENTO
 [![Docs](https://img.shields.io/badge/pymemento.readthedocs.io-blueviolet)](https://pymemento.readthedocs.io)
 [![Documentation Status](https://readthedocs.org/projects/pymemento/badge/?version=latest)](https://pymemento.readthedocs.io/en/latest/?badge=latest)
 
-PyMEMENTO is a simple python implementation of the MEMENTO method for generating paths between known protein conformations as inputs for umbrella sampling (Morphing Endstates by Modelling Ensembles with iNdependent TOpologies). A manuscript desribing the method and its validation in detail is in preparation. Please cite PyMEMENTO by this publication once it is released.
+PyMEMENTO is a simple python implementation of the MEMENTO method for generating paths between known protein conformations as inputs for umbrella sampling (Morphing Endstates by Modelling Ensembles with iNdependent TOpologies). The method is described in detail in the accompanying [publication](https://pubs.acs.org/doi/full/10.1021/acs.jctc.3c00140). If MEMENTO or this repository have been useful in your work, please cite this paper.
 
 ### Installation
 
