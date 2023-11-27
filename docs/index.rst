@@ -7,8 +7,8 @@ Welcome to PyMEMENTO's documentation!
 =====================================
 
 PyMEMENTO is a simple implementation of the MEMENTO method 
-(**M**\ orphing **E**\ ndstates by **M**\ odelling **E**\ nsembles with i\ **N**\ dependent **TO**\ pologies) --- a manuscript describing the
-method is in preparation. This documentation includes some background on MEMENTO, installation information 
+(**M**\ orphing **E**\ ndstates by **M**\ odelling **E**\ nsembles with i\ **N**\ dependent **TO**\ pologies) --- a paper describing the method
+is published `here <https://pubs.acs.org/doi/full/10.1021/acs.jctc.3c00140>`. This documentation includes some background on MEMENTO, installation information 
 for PyMEMENTO as well as several
 worked examples as used in our validation paper. This is alongside the full API documentation of all the python code.
 
