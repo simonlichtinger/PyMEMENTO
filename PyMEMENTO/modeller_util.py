@@ -81,7 +81,7 @@ def create_ali_file(
 
 
 def run_modeller(
-    path: str, number_of_models: int, ali_file_name: str = "morph->protein.ali"
+    path: str, number_of_models: int,  disulphide_patches:list, ali_file_name: str = "morph->protein.ali",
 ):
     """Run modeller on the ali file contained in a specified directory.
 
@@ -89,6 +89,8 @@ def run_modeller(
     :type path: str
     :param number_of_models: How many models to generate.
     :type number_of_models: int
+    :param disulphide_patches: List of tuples of the form (residue_number1, chain_id1, residue_number2, chain_id2) for each disulphide bond to be modelled.
+    :type disulphide_patches: list<tuple<int, str, int, str>>
     :param ali_file_name: Name of the ali file to be used, defaults to "morph->protein.ali"
     :type ali_file_name: str, optional
     """
@@ -117,6 +119,12 @@ def run_modeller(
     # Do the actual modelling based on an ali file
     env = Environ()
     a = AutoModel(env, alnfile=ali_file_name, knowns="morph", sequence="protein")
+
+    # Add disulphide bonds if necessary
+    if disulphide_patches:
+        for bond in disulphide_patches:
+            a.patch(residue_type="DISU", residues=(f"{bond[0]}:{bond[1]}", f"{bond[2]}:{bond[3]}"))
+
     a.starting_model = 1
     a.ending_model = number_of_models
     a.make()

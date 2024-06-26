@@ -379,7 +379,12 @@ def generate_posre(
             )
     else:
         # for multichain proteins, need to split into individual chains (while reassigning atom indices)
-        for chainID in set(multiple_chains):
+        prev_chain_id = None
+        for chainID in multiple_chains:
+            if chainID == prev_chain_id:
+                continue
+
+            prev_chain_id = chainID
             # Make a selection string for the residues of a particular chain ID
             include_chainres = []
             for n, res_num in enumerate(residue_numbers):
@@ -388,11 +393,9 @@ def generate_posre(
             include_res_string = " | ".join([f"r {res}" for res in include_chainres])
 
             # Output a temporary coordinate file that only includes one chain
-
             if len(exclude_res) > 0:
                 string_mda_sele = "protein and not (" + " or ".join(
-                    [f"resnum {res}" for res in exclude_res] + ")"
-                )
+                    [f"resnum {res}" for res in exclude_res]) + ")"
             else:
                 string_mda_sele = "protein"
 
@@ -400,11 +403,22 @@ def generate_posre(
 
             universe_to_process = mda.Universe(file_to_process)
             atomgroups_to_merge = []
+
+            caps_counter = 0
             for n, res in enumerate(
                 universe_to_process.select_atoms(string_mda_sele).residues
             ):
-                if multiple_chains[n] == chainID:
-                    atomgroups_to_merge.append(res.atoms)
+                if not res.resname in ["ACE", "NME"]:
+                    if multiple_chains[n-caps_counter] == chainID:
+                        atomgroups_to_merge.append(res.atoms)
+                elif res.resname == "ACE":
+                    if multiple_chains[n-caps_counter+1] == chainID:
+                        atomgroups_to_merge.append(res.atoms)
+                    caps_counter += 1
+                elif res.resname == "NME":
+                    if multiple_chains[n-caps_counter-1] == chainID:
+                        atomgroups_to_merge.append(res.atoms)
+                    caps_counter += 1
 
             universe_onechain = mda.Merge(*atomgroups_to_merge)
             universe_onechain.atoms.write(temp_chain_file)

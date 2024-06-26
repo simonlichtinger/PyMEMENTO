@@ -135,19 +135,35 @@ class MEMENTO:
 
         if multiple_chains != None:
             self.universe_start.add_TopologyAttr("chainID")
-
+            offset = 0
             for r, res in enumerate(
                 self.universe_start.select_atoms("protein").residues
             ):
-                for atom in res.atoms:
-                    atom.chainID = multiple_chains[r]
+                if res.atoms[0].resname == "ACE" or res.atoms[0].resname == "NME":
+                    for atom in res.atoms:
+                        atom.chainID = 'X'
+                    offset += 1
+                else:
+                    for atom in res.atoms:
+                        atom.chainID = multiple_chains[r-offset]
 
             self.universe_target.add_TopologyAttr("chainID")
+            offset = 0
             for r, res in enumerate(
                 self.universe_target.select_atoms("protein").residues
             ):
-                for atom in res.atoms:
-                    atom.chainID = multiple_chains[r]
+                if res.atoms[0].resname == "ACE" or res.atoms[0].resname == "NME":
+                    for atom in res.atoms:
+                        atom.chainID = 'X'
+                    offset += 1
+                    continue
+                else:
+                    for atom in res.atoms:
+                        atom.chainID = multiple_chains[r-offset]
+            
+            # now remove the X chains from the universe
+            self.universe_start = mda.Merge(self.universe_start.select_atoms("not chainid X"))
+            self.universe_target = mda.Merge(self.universe_target.select_atoms("not chainid X"))
 
         # Create working directory if necessary
         os.makedirs(working_dir, exist_ok=True)
@@ -220,7 +236,7 @@ class MEMENTO:
             else:
                 self.universe_target.atoms.write(join(local_path, "target.pdb"))
 
-            # Interpolate coordinates, (1-l)* original + l*(target-original)
+            # Interpolate coordinates, (1-l)* original + l*(target)
             for n, l in enumerate(np.linspace(0, 1, number_of_intermediates)):
                 intermediate_universe = self.universe_start.copy()
 
@@ -275,6 +291,7 @@ class MEMENTO:
         include_residues=None,
         poolsize=12,
         mutagenesis=None,
+        disulphide_patches=None,
     ):
         """Use the modeller package to generate fixed models based on the morphs already
         present in the folder structure. Caps are removed at this stage. Mutagenesis can be
@@ -288,6 +305,10 @@ class MEMENTO:
         :type poolsize: int, optional
         :param mutagenesis: List of tuples of the form (residue_number, original_residue, new_residue), eg. (10, 'SER', 'ALA') for S10A mutation. \
         This is not supported for multichain proteins yet. Defaults to None
+        :type mutagenesis: list<tuple<int, str, str>>, optional
+        :param disulphide_patches: List of tuples of the form (residue_number1, chain_id1, residue_number2, chain_id2), eg. (10, A, 20, B) for a disulphide bridge between C10:A and C20:B. \
+        Defaults to None
+        :type disulphide_patches: list<tuple<int, str, int, str>>, optional
         """
 
         if not self.morph_done:
@@ -345,7 +366,7 @@ class MEMENTO:
             # The normal with statement doesn't work with pytest-cov
             pool = multiprocessing.Pool(poolsize)
             pool.starmap(
-                run_modeller, [(frame, number_of_models) for frame in frame_paths]
+                run_modeller, [(frame, number_of_models, disulphide_patches) for frame in frame_paths]
             )
             pool.close()
             pool.join()
@@ -425,13 +446,6 @@ class MEMENTO:
         :type asp_protonation_states: list, optional
         """
 
-        # Currently multichain is not supported with caps
-
-        if caps and self.multiple_chains:
-            raise RuntimeError(
-                "Currently, combining caps and multichain proteins isn't supported."
-            )
-
         if not self.pathfinding_done:
             raise RuntimeError(
                 "Need to search for the best path before processing models."
@@ -492,25 +506,67 @@ class MEMENTO:
                     else join(ref_folder, "termini_ref.pdb")
                 )
                 for n in range(self.number_of_intermediates):
-                    cap_termini(
-                        join(local_path, file_root + f"{n}.pdb"),
-                        join(local_path, file_root + f"capped{n}.pdb"),
-                        ref_file,
-                        self.residue_numbers[0],
-                        self.residue_numbers[-1],
-                    )
+                    if not self.multiple_chains:
+                        cap_termini(
+                            join(local_path, file_root + f"{n}.pdb"),
+                            join(local_path, file_root + f"capped{n}.pdb"),
+                            ref_file,
+                            self.residue_numbers[0],
+                            self.residue_numbers[-1],
+                        )
 
-                    # Rename the cap residues to fit the protein naming convention
-                    sed(
-                        join(local_path, file_root + f"capped{n}.pdb"),
-                        "ACE X   1",
-                        "ACE A" + str(self.residue_numbers[0] - 1).rjust(4, " "),
-                    )
-                    sed(
-                        join(local_path, file_root + f"capped{n}.pdb"),
-                        "NME X   4",
-                        "NME A" + str(self.residue_numbers[-1] + 1).rjust(4, " "),
-                    )
+                        # Rename the cap residues to fit the protein naming convention
+                        sed(
+                            join(local_path, file_root + f"capped{n}.pdb"),
+                            "ACE X   1",
+                            "ACE A" + str(self.residue_numbers[0] - 1).rjust(4, " "),
+                        )
+                        sed(
+                            join(local_path, file_root + f"capped{n}.pdb"),
+                            "NME X   4",
+                            "NME A" + str(self.residue_numbers[-1] + 1).rjust(4, " "),
+                        )
+                    else:
+                        # get unique chain ids from multiple_chains list in order
+                        
+                        unique_chain_ids = []
+                        for chain_id in self.multiple_chains:
+                            if chain_id not in unique_chain_ids:
+                                unique_chain_ids.append(chain_id)
+
+                        last_filename = join(local_path, file_root + f"{n}.pdb")
+                        for c, chain_id in enumerate(unique_chain_ids):
+                            # get the residue numbers that have this chain id
+                            chain_residue_numbers = [
+                                self.residue_numbers[i]
+                                for i in range(len(self.residue_numbers))
+                                if self.multiple_chains[i] == chain_id
+                            ]
+                            print(chain_residue_numbers)
+            
+                            # cap the termini for this chain, save to a temporary file
+                            cap_termini(
+                                last_filename,
+                                join(local_path, file_root + f"capped{n}.pdb"),
+                                ref_file,
+                                chain_residue_numbers[0],
+                                chain_residue_numbers[-1],
+                                cap_chain=chain_id
+                            )
+                            last_filename = join(local_path, file_root + f"capped{n}.pdb")
+
+                            # Rename the cap residues to fit the protein naming convention
+                            sed(
+                                join(local_path, file_root + f"capped{n}.pdb"),
+                                "ACE X   1",
+                                f"ACE {chain_id}" + str(chain_residue_numbers[0] - 1).rjust(4, " "),
+                            )
+                            sed(
+                                join(local_path, file_root + f"capped{n}.pdb"),
+                                "NME X   4",
+                                f"NME {chain_id}" + str(chain_residue_numbers[-1] + 1).rjust(4, " "),
+                            )
+
                 file_root = "framecapped"
 
             # Copy over the forcefield to our root directory for gmx to use
