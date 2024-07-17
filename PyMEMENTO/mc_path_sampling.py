@@ -81,7 +81,7 @@ class MCPathSampler:
             for j in range(1, self.MODELS_PER_WINDOW + 1):
                 self.universes[-1].append(
                     mda.Universe(
-                        self.FOLDER + f"morph{i}/protein.B9999{str(j).zfill(4)}.pdb"
+                        self.FOLDER + f"morph{i}/protein.B9999{str(j).zfill(4)}.pdb", in_memory=True
                     )
                 )
 
